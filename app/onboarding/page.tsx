@@ -10,25 +10,30 @@ export default function OnboardingPage() {
 
             <form action={updateProfile} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">User ID / Roll No</label>
-                    <input
-                        type="text"
-                        name="id"
-                        required
-                        placeholder="e.g. 2026CS101"
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
-                    <input
-                        type="text"
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Department/School</label>
+                    <select
                         name="department"
                         required
-                        placeholder="e.g. Computer Science"
                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
-                    />
+                    >
+                        <option value="">Select Department/School...</option>
+                        <option value="Astronomy, Astrophysiscs and Space Engineering">Astronomy, Astrophysiscs and Space Engineering</option>
+                        <option value="Chemical Engineering">Chemical Engineering</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Electrical Engineering">Electrical Engineering</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Metallurgical Engineering and Materials Science">Metallurgical Engineering and Materials Science</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Humanities and Social Sciences">Humanities and Social Sciences</option>
+                        <option value="Mehta Family School of Biosciences and Biomedical Engineering">Mehta Family School of Biosciences and Biomedical Engineering</option>
+                        <option value="Mehta Family School of Sustainability">Mehta Family School of Sustainability</option>
+                        <option value="School of Innovation">School of Innovation</option>
+
+                    </select>
+
                 </div>
 
                 <div>
@@ -41,8 +46,12 @@ export default function OnboardingPage() {
                         <option value="">Select Role...</option>
                         <option value="Student">Student</option>
                         <option value="Professor">Professor</option>
-                        <option value="Staff">Staff</option>
                         <option value="Admin">Admin</option>
+                        <option value="Senator">Senator</option>
+                        <option value="Club Coordinator">Club Coordinator</option>
+                        <option value="General Secretary">General Secretary</option>
+                        <option value="President Gymkhana">President Gymkhana</option>
+                        <option value="Staff">Staff</option>
                     </select>
                 </div>
 

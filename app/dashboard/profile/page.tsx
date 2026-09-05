@@ -68,11 +68,6 @@ export default async function ProfilePage() {
                             <p className="text-sm font-medium text-slate-400">
                                 {userEmail}
                             </p>
-                            {user?.id && (
-                                <p className="text-xs font-mono text-indigo-300 bg-indigo-950/60 border border-indigo-800/50 inline-block px-2.5 py-0.5 rounded-md mt-2">
-                                    ID: {user.id}
-                                </p>
-                            )}
                         </div>
                     </div>
 

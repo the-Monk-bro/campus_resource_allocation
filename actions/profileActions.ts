@@ -14,13 +14,12 @@ export async function updateProfile(formData: FormData) {
     throw new Error("Unauthorized");
   }
 
-  const id = (formData.get("id") as string)?.trim();
   const department = (formData.get("department") as string)?.trim();
   const role = (formData.get("role") as string)?.trim();
   const phno = (formData.get("phno") as string)?.trim();
 
   // Validate all fields are non-empty
-  if (!id || !department || !role || !phno) {
+  if (!department || !role || !phno) {
     throw new Error("All input fields are required.");
   }
 
@@ -32,12 +31,11 @@ export async function updateProfile(formData: FormData) {
   await db
     .update(users)
     .set({
-      id: id,
       department: department,
       role: role,
       phno: phno,
     })
     .where(eq(users.email, session.user.email));
 
-  redirect("/profile");
+  redirect("/dashboard/profile");
 }
