@@ -1,15 +1,24 @@
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 import db from "@/db";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-    adapter: DrizzleAdapter(db),
-    providers: [
-        Google({
-            clientId: process.env.AUTH_GOOGLE_ID!,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-        }),
-    ],
-    secret: process.env.AUTH_SECRET!,
-});
+export const authOptions: NextAuthOptions = {
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+  }),
+  session: {
+    strategy: "jwt",
+  },
+  providers: [
+    GoogleProvider({
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+    }),
+  ],
+  secret: process.env.AUTH_SECRET!,
+};
