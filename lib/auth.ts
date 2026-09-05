@@ -14,6 +14,10 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  pages: {
+    newUser: "/onboarding",
+    //error: "/error"
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.AUTH_GOOGLE_ID!,

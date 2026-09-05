@@ -30,7 +30,7 @@ export const accounts = pgTable(
   {
     userId: text("userId")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
     type: text("type").$type<AdapterAccount["type"]>().notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("providerAccountId").notNull(),
@@ -53,7 +53,7 @@ export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
@@ -74,7 +74,7 @@ export const verificationTokens = pgTable(
 
 
 
-const statusEnum = pgEnum("resource_status", ["AVAILABLE", "MAINTENANCE", "RETIRED"]);
+export const statusEnum = pgEnum("resource_status", ["AVAILABLE", "MAINTENANCE", "RETIRED"]);
 
 export const resources = pgTable(
   "resources",
