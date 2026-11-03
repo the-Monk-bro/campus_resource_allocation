@@ -1,15 +1,8 @@
 "use server";
 
-import db from "@/db";
-import {
-  requests,
-  resources,
-  users,
-  approval_hierarchies,
-  approval_steps,
-  allocations,
-} from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import pool from "@/lib/db";
+import { UserRow } from "@/lib/types/db";
+import { RowDataPacket } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -48,6 +41,18 @@ export interface PendingApprovalItem {
   issuetime: string;
 }
 
+interface StepDetailQueryResult extends RowDataPacket {
+  hid: string;
+  hlevel: number;
+  approverid: string;
+  approverName: string | null;
+  approverEmail: string | null;
+  approvalstatus: "PENDING" | "APPROVED" | "REJECTED";
+  issuetime: Date;
+  actiontime: Date | null;
+  shortcomment: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Get approval steps for a specific request (for My Requests dropdown)
 // ---------------------------------------------------------------------------
@@ -55,23 +60,24 @@ export async function getApprovalStepsForRequestAction(
   reqid: number
 ): Promise<{ success: true; steps: ApprovalStepDetail[] } | { success: false; error: string }> {
   try {
-    const rows = await db
-      .select({
-        hid: approval_steps.hid,
-        hlevel: approval_hierarchies.hlevel,
-        approverid: approval_steps.approverid,
-        approverName: users.name,
-        approverEmail: users.email,
-        approvalstatus: approval_steps.approvalstatus,
-        issuetime: approval_steps.issuetime,
-        actiontime: approval_steps.actiontime,
-        shortcomment: approval_steps.shortcomment,
-      })
-      .from(approval_steps)
-      .innerJoin(approval_hierarchies, eq(approval_steps.hid, approval_hierarchies.hid))
-      .innerJoin(users, eq(approval_steps.approverid, users.id))
-      .where(eq(approval_steps.reqid, reqid))
-      .orderBy(asc(approval_hierarchies.hlevel));
+    const [rows] = await pool.execute<StepDetailQueryResult[]>(
+      `SELECT
+        ast.hid,
+        ah.hlevel,
+        ast.approverid,
+        u.name AS approverName,
+        u.email AS approverEmail,
+        ast.approvalstatus,
+        ast.issuetime,
+        ast.actiontime,
+        ast.shortcomment
+       FROM approval_steps ast
+       INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
+       INNER JOIN users u ON ast.approverid = u.id
+       WHERE ast.reqid = ?
+       ORDER BY ah.hlevel ASC`,
+      [reqid]
+    );
 
     return {
       success: true,
@@ -82,15 +88,29 @@ export async function getApprovalStepsForRequestAction(
         approverName: r.approverName,
         approverEmail: r.approverEmail,
         approvalstatus: r.approvalstatus,
-        issuetime: r.issuetime.toISOString(),
-        actiontime: r.actiontime ? r.actiontime.toISOString() : null,
+        issuetime: new Date(r.issuetime).toISOString(),
+        actiontime: r.actiontime ? new Date(r.actiontime).toISOString() : null,
         shortcomment: r.shortcomment,
       })),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch approval steps:", error);
-    return { success: false, error: error?.message || "Failed to fetch approval steps." };
+    const message = error instanceof Error ? error.message : "Failed to fetch approval steps.";
+    return { success: false, error: message };
   }
+}
+
+interface PendingStepQueryResult extends RowDataPacket {
+  hid: string;
+  reqid: number;
+  hlevel: number;
+  resid: string;
+  issuetime: Date;
+}
+
+interface StepStatusQueryResult extends RowDataPacket {
+  hlevel: number;
+  approvalstatus: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -109,33 +129,30 @@ export async function getMyPendingApprovalsAction(): Promise<
       return { success: false, error: "Unauthorized." };
     }
 
-    const [currentUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, session.user.email));
+    const [userRows] = await pool.execute<UserRow[]>(
+      `SELECT id, name, email FROM users WHERE email = ? LIMIT 1`,
+      [session.user.email]
+    );
 
+    const currentUser = userRows[0];
     if (!currentUser) {
       return { success: false, error: "User not found." };
     }
 
     // Get all PENDING steps assigned to this approver
-    const pendingSteps = await db
-      .select({
-        hid: approval_steps.hid,
-        reqid: approval_steps.reqid,
-        hlevel: approval_hierarchies.hlevel,
-        resid: approval_hierarchies.resid,
-        issuetime: approval_steps.issuetime,
-      })
-      .from(approval_steps)
-      .innerJoin(approval_hierarchies, eq(approval_steps.hid, approval_hierarchies.hid))
-      .where(
-        and(
-          eq(approval_steps.approverid, currentUser.id),
-          eq(approval_steps.approvalstatus, "PENDING")
-        )
-      )
-      .orderBy(asc(approval_steps.issuetime));
+    const [pendingSteps] = await pool.execute<PendingStepQueryResult[]>(
+      `SELECT
+        ast.hid,
+        ast.reqid,
+        ah.hlevel,
+        ah.resid,
+        ast.issuetime
+       FROM approval_steps ast
+       INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
+       WHERE ast.approverid = ? AND ast.approvalstatus = 'PENDING'
+       ORDER BY ast.issuetime ASC`,
+      [currentUser.id]
+    );
 
     // For each pending step, check if previous levels are all approved
     const eligibleItems: PendingApprovalItem[] = [];
@@ -143,24 +160,23 @@ export async function getMyPendingApprovalsAction(): Promise<
     for (const step of pendingSteps) {
       // If this is level 1, no prerequisites
       if (step.hlevel === 1) {
-        // Fetch full request + requester + resource info
-        const item = await buildApprovalItem(step.hid, step.reqid, step.hlevel, step.issuetime);
+        const item = await buildApprovalItem(step.hid, step.reqid, step.hlevel, new Date(step.issuetime));
         if (item) eligibleItems.push(item);
         continue;
       }
 
       // Check if all steps for this request at lower levels are APPROVED
-      // Build a map of hlevel -> status for this request
-      const statusMap = new Map<number, string>();
-      const allStepsForReq = await db
-        .select({
-          hlevel: approval_hierarchies.hlevel,
-          approvalstatus: approval_steps.approvalstatus,
-        })
-        .from(approval_steps)
-        .innerJoin(approval_hierarchies, eq(approval_steps.hid, approval_hierarchies.hid))
-        .where(eq(approval_steps.reqid, step.reqid));
+      const [allStepsForReq] = await pool.execute<StepStatusQueryResult[]>(
+        `SELECT
+          ah.hlevel,
+          ast.approvalstatus
+         FROM approval_steps ast
+         INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
+         WHERE ast.reqid = ?`,
+        [step.reqid]
+      );
 
+      const statusMap = new Map<number, string>();
       for (const s of allStepsForReq) {
         statusMap.set(s.hlevel, s.approvalstatus);
       }
@@ -170,16 +186,31 @@ export async function getMyPendingApprovalsAction(): Promise<
         .every(([, status]) => status === "APPROVED");
 
       if (allPreviousApproved) {
-        const item = await buildApprovalItem(step.hid, step.reqid, step.hlevel, step.issuetime);
+        const item = await buildApprovalItem(step.hid, step.reqid, step.hlevel, new Date(step.issuetime));
         if (item) eligibleItems.push(item);
       }
     }
 
     return { success: true, items: eligibleItems };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch pending approvals:", error);
-    return { success: false, error: error?.message || "Failed to fetch pending approvals." };
+    const message = error instanceof Error ? error.message : "Failed to fetch pending approvals.";
+    return { success: false, error: message };
   }
+}
+
+interface BuildApprovalItemQueryResult extends RowDataPacket {
+  reqid: number;
+  requesterid: string;
+  requesterName: string | null;
+  requesterEmail: string | null;
+  resid: string;
+  resourceName: string | null;
+  resourceLocation: string | null;
+  purpose: string | null;
+  starttime: Date;
+  endtime: Date;
+  reqtime: Date;
 }
 
 async function buildApprovalItem(
@@ -188,24 +219,26 @@ async function buildApprovalItem(
   hlevel: number,
   issuetime: Date
 ): Promise<PendingApprovalItem | null> {
-  const rows = await db
-    .select({
-      reqid: requests.reqid,
-      requesterid: requests.requesterid,
-      requesterName: users.name,
-      requesterEmail: users.email,
-      resid: requests.resid,
-      resourceName: resources.name,
-      resourceLocation: resources.location,
-      purpose: requests.purpose,
-      starttime: requests.starttime,
-      endtime: requests.endtime,
-      reqtime: requests.reqtime,
-    })
-    .from(requests)
-    .innerJoin(users, eq(requests.requesterid, users.id))
-    .leftJoin(resources, eq(requests.resid, resources.id))
-    .where(eq(requests.reqid, reqid));
+  const [rows] = await pool.execute<BuildApprovalItemQueryResult[]>(
+    `SELECT
+      r.reqid,
+      r.requesterid,
+      u.name AS requesterName,
+      u.email AS requesterEmail,
+      r.resid,
+      res.name AS resourceName,
+      res.location AS resourceLocation,
+      r.purpose,
+      r.starttime,
+      r.endtime,
+      r.reqtime
+     FROM requests r
+     INNER JOIN users u ON r.requesterid = u.id
+     LEFT JOIN resources res ON r.resid = res.id
+     WHERE r.reqid = ?
+     LIMIT 1`,
+    [reqid]
+  );
 
   if (rows.length === 0) return null;
   const r = rows[0];
@@ -221,11 +254,18 @@ async function buildApprovalItem(
     resourceName: r.resourceName,
     resourceLocation: r.resourceLocation,
     purpose: r.purpose,
-    starttime: r.starttime.toISOString(),
-    endtime: r.endtime.toISOString(),
-    reqtime: r.reqtime.toISOString(),
+    starttime: new Date(r.starttime).toISOString(),
+    endtime: new Date(r.endtime).toISOString(),
+    reqtime: new Date(r.reqtime).toISOString(),
     issuetime: issuetime.toISOString(),
   };
+}
+
+interface ApprovalStepCheckRow extends RowDataPacket {
+  hid: string;
+  reqid: number;
+  approverid: string;
+  approvalstatus: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -243,27 +283,26 @@ export async function actOnApprovalAction(input: {
       return { success: false, error: "Unauthorized." };
     }
 
-    const [currentUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, session.user.email));
+    const [userRows] = await pool.execute<UserRow[]>(
+      `SELECT id FROM users WHERE email = ? LIMIT 1`,
+      [session.user.email]
+    );
 
+    const currentUser = userRows[0];
     if (!currentUser) {
       return { success: false, error: "User not found." };
     }
 
     // Verify this step belongs to the current user and is PENDING
-    const [step] = await db
-      .select()
-      .from(approval_steps)
-      .where(
-        and(
-          eq(approval_steps.hid, input.hid),
-          eq(approval_steps.reqid, input.reqid),
-          eq(approval_steps.approverid, currentUser.id)
-        )
-      );
+    const [stepRows] = await pool.execute<ApprovalStepCheckRow[]>(
+      `SELECT hid, reqid, approverid, approvalstatus
+       FROM approval_steps
+       WHERE hid = ? AND reqid = ? AND approverid = ?
+       LIMIT 1`,
+      [input.hid, input.reqid, currentUser.id]
+    );
 
+    const step = stepRows[0];
     if (!step) {
       return { success: false, error: "Approval step not found or not assigned to you." };
     }
@@ -274,63 +313,76 @@ export async function actOnApprovalAction(input: {
 
     const newStatus = input.action === "APPROVE" ? "APPROVED" : "REJECTED";
     const now = new Date();
+    const shortcomment = input.comment?.trim().substring(0, 100) || null;
 
-    // Update the step
-    await db
-      .update(approval_steps)
-      .set({
-        approvalstatus: newStatus,
-        actiontime: now,
-        shortcomment: input.comment?.trim().substring(0, 100) || null,
-      })
-      .where(
-        and(
-          eq(approval_steps.hid, input.hid),
-          eq(approval_steps.reqid, input.reqid)
-        )
+    const conn = await pool.getConnection();
+
+    try {
+      await conn.beginTransaction();
+
+      // Update the step
+      await conn.execute(
+        `UPDATE approval_steps
+         SET approvalstatus = ?, actiontime = ?, shortcomment = ?
+         WHERE hid = ? AND reqid = ?`,
+        [newStatus, now, shortcomment, input.hid, input.reqid]
       );
 
-    if (input.action === "REJECT") {
-      // Reject the entire request
-      await db
-        .update(requests)
-        .set({ reqstatus: "REJECTED" })
-        .where(eq(requests.reqid, input.reqid));
+      if (input.action === "REJECT") {
+        // Reject the entire request
+        await conn.execute(
+          `UPDATE requests SET reqstatus = 'REJECTED' WHERE reqid = ?`,
+          [input.reqid]
+        );
 
-      revalidatePath("/dashboard/approvals");
-      revalidatePath("/dashboard/requests");
-      return { success: true, message: "Request rejected successfully." };
+        await conn.commit();
+
+        revalidatePath("/dashboard/approvals");
+        revalidatePath("/dashboard/requests");
+        return { success: true, message: "Request rejected successfully." };
+      }
+
+      // Action is APPROVE — check if all steps for this request are now approved
+      const [allSteps] = await conn.execute<RowDataPacket[]>(
+        `SELECT approvalstatus FROM approval_steps WHERE reqid = ?`,
+        [input.reqid]
+      );
+
+      const allApproved = allSteps.every((s) => s.approvalstatus === "APPROVED");
+
+      if (allApproved) {
+        // Final approval — mark request APPROVED and create allocation
+        await conn.execute(
+          `UPDATE requests SET reqstatus = 'APPROVED' WHERE reqid = ?`,
+          [input.reqid]
+        );
+
+        // Create allocation (or update if already exists)
+        await conn.execute(
+          `INSERT INTO allocations (reqid, allocationstatus) VALUES (?, 'SCHEDULED')
+           ON DUPLICATE KEY UPDATE allocationstatus = 'SCHEDULED'`,
+          [input.reqid]
+        );
+      }
+
+      await conn.commit();
+    } catch (txErr) {
+      await conn.rollback();
+      throw txErr;
+    } finally {
+      conn.release();
     }
-
-    // Action is APPROVE — check if all steps for this request are now approved
-    const allSteps = await db
-      .select({ approvalstatus: approval_steps.approvalstatus })
-      .from(approval_steps)
-      .where(eq(approval_steps.reqid, input.reqid));
-
-    const allApproved = allSteps.every((s) => s.approvalstatus === "APPROVED");
-
-    if (allApproved) {
-      // Final approval — mark request APPROVED and create allocation
-      await db
-        .update(requests)
-        .set({ reqstatus: "APPROVED" })
-        .where(eq(requests.reqid, input.reqid));
-
-      // Create allocation
-      await db.insert(allocations).values({
-        reqid: input.reqid,
-        allocationstatus: "SCHEDULED",
-      });
-    }
-    // If not all approved, request stays PENDING; next level approver will see it
 
     revalidatePath("/dashboard/approvals");
     revalidatePath("/dashboard/requests");
     revalidatePath("/dashboard/allocations");
-    return { success: true, message: input.action === "APPROVE" ? "Request approved successfully." : "Request rejected." };
-  } catch (error: any) {
+    return {
+      success: true,
+      message: input.action === "APPROVE" ? "Request approved successfully." : "Request rejected.",
+    };
+  } catch (error: unknown) {
     console.error("Failed to act on approval:", error);
-    return { success: false, error: error?.message || "Failed to process approval action." };
+    const message = error instanceof Error ? error.message : "Failed to process approval action.";
+    return { success: false, error: message };
   }
 }

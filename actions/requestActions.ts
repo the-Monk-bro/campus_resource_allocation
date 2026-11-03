@@ -1,8 +1,8 @@
 "use server";
 
-import db from "@/db";
-import { requests, resources, users, approval_hierarchies, approval_steps } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import pool from "@/lib/db";
+import { UserRow, ResourceRow, ApprovalHierarchyRow, RequestRow } from "@/lib/types/db";
+import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -23,11 +23,12 @@ export async function createRequestAction(input: CreateRequestInput) {
     }
 
     // Find the logged-in user in DB
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, session.user.email));
+    const [userRows] = await pool.execute<UserRow[]>(
+      `SELECT id, name, email FROM users WHERE email = ? LIMIT 1`,
+      [session.user.email]
+    );
 
+    const user = userRows[0];
     if (!user) {
       return { success: false, error: "User record not found. Please complete profile onboarding." };
     }
@@ -56,11 +57,12 @@ export async function createRequestAction(input: CreateRequestInput) {
     }
 
     // Verify resource exists
-    const [existingResource] = await db
-      .select()
-      .from(resources)
-      .where(eq(resources.id, resid.trim()));
+    const [resRows] = await pool.execute<ResourceRow[]>(
+      `SELECT id, name, status FROM resources WHERE id = ? LIMIT 1`,
+      [resid.trim()]
+    );
 
+    const existingResource = resRows[0];
     if (!existingResource) {
       return { success: false, error: `Selected resource '${resid}' was not found in the database.` };
     }
@@ -71,55 +73,77 @@ export async function createRequestAction(input: CreateRequestInput) {
       return { success: false, error: "Purpose cannot exceed 100 characters." };
     }
 
-    // Insert request
-    const [inserted] = await db
-      .insert(requests)
-      .values({
-        requesterid: user.id,
-        resid: existingResource.id,
-        purpose: trimmedPurpose || null,
-        starttime: startDate,
-        endtime: endDate,
-        reqstatus: "PENDING",
-        reqtime: new Date(),
-      })
-      .returning();
+    const now = new Date();
+    const conn = await pool.getConnection();
 
-    // Auto-create all approval steps for this request based on the approval hierarchy
-    const hierarchyRows = await db
-      .select()
-      .from(approval_hierarchies)
-      .where(eq(approval_hierarchies.resid, existingResource.id))
-      .orderBy(asc(approval_hierarchies.hlevel));
+    let newRequestId: number;
 
-    if (hierarchyRows.length > 0) {
-      await db.insert(approval_steps).values(
-        hierarchyRows.map((h) => ({
-          hid: h.hid,
-          reqid: inserted.reqid,
-          approverid: h.approverid,
-          approvalstatus: "PENDING" as const,
-          issuetime: new Date(),
-        }))
+    try {
+      await conn.beginTransaction();
+
+      // Insert request
+      const [insertResult] = await conn.execute<ResultSetHeader>(
+        `INSERT INTO requests (requesterid, resid, purpose, starttime, endtime, reqstatus, reqtime)
+         VALUES (?, ?, ?, ?, ?, 'PENDING', ?)`,
+        [user.id, existingResource.id, trimmedPurpose || null, startDate, endDate, now]
       );
+
+      newRequestId = insertResult.insertId;
+
+      // Auto-create all approval steps for this request based on the approval hierarchy
+      const [hierarchyRows] = await conn.execute<ApprovalHierarchyRow[]>(
+        `SELECT hid, hlevel, approverid, resid FROM approval_hierarchies WHERE resid = ? ORDER BY hlevel ASC`,
+        [existingResource.id]
+      );
+
+      if (hierarchyRows.length > 0) {
+        const placeholders = hierarchyRows.map(() => `(?, ?, ?, 'PENDING', ?)`).join(", ");
+        const params: (string | number | Date)[] = [];
+        for (const h of hierarchyRows) {
+          params.push(h.hid, newRequestId, h.approverid, now);
+        }
+
+        await conn.execute(
+          `INSERT INTO approval_steps (hid, reqid, approverid, approvalstatus, issuetime) VALUES ${placeholders}`,
+          params
+        );
+      }
+
+      await conn.commit();
+    } catch (txError) {
+      await conn.rollback();
+      throw txError;
+    } finally {
+      conn.release();
     }
 
     revalidatePath("/dashboard/requests");
     return {
       success: true,
       message: "Request submitted successfully!",
-      requestId: inserted?.reqid,
+      requestId: newRequestId,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create request:", error);
+    const message = error instanceof Error ? error.message : "Failed to submit request due to a server error.";
     return {
       success: false,
-      error: error?.message || "Failed to submit request due to a server error.",
+      error: message,
     };
   }
 }
 
 export interface ApproverInfo {
+  hid: string;
+  hlevel: number;
+  approverId: string;
+  approverName: string | null;
+  approverEmail: string | null;
+  approverRole: string | null;
+  approverDepartment: string | null;
+}
+
+interface ApproverHierarchyQueryResult extends RowDataPacket {
   hid: string;
   hlevel: number;
   approverId: string;
@@ -137,20 +161,21 @@ export async function getApprovalHierarchyAction(
       return { success: false, error: "No resource specified." };
     }
 
-    const rows = await db
-      .select({
-        hid: approval_hierarchies.hid,
-        hlevel: approval_hierarchies.hlevel,
-        approverId: users.id,
-        approverName: users.name,
-        approverEmail: users.email,
-        approverRole: users.role,
-        approverDepartment: users.department,
-      })
-      .from(approval_hierarchies)
-      .innerJoin(users, eq(approval_hierarchies.approverid, users.id))
-      .where(eq(approval_hierarchies.resid, resid.trim()))
-      .orderBy(asc(approval_hierarchies.hlevel));
+    const [rows] = await pool.execute<ApproverHierarchyQueryResult[]>(
+      `SELECT
+        ah.hid,
+        ah.hlevel,
+        u.id AS approverId,
+        u.name AS approverName,
+        u.email AS approverEmail,
+        u.role AS approverRole,
+        u.department AS approverDepartment
+       FROM approval_hierarchies ah
+       INNER JOIN users u ON ah.approverid = u.id
+       WHERE ah.resid = ?
+       ORDER BY ah.hlevel ASC`,
+      [resid.trim()]
+    );
 
     return {
       success: true,
@@ -164,11 +189,12 @@ export async function getApprovalHierarchyAction(
         approverDepartment: r.approverDepartment,
       })),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch approval hierarchy:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch approval hierarchy.";
     return {
       success: false,
-      error: error?.message || "Failed to fetch approval hierarchy.",
+      error: message,
     };
   }
 }
@@ -181,21 +207,23 @@ export async function cancelRequestAction(reqid: number) {
       return { success: false, error: "Unauthorized." };
     }
 
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, session.user.email));
+    const [userRows] = await pool.execute<UserRow[]>(
+      `SELECT id FROM users WHERE email = ? LIMIT 1`,
+      [session.user.email]
+    );
 
+    const user = userRows[0];
     if (!user) {
       return { success: false, error: "User not found." };
     }
 
     // Verify the request belongs to this user
-    const [existingReq] = await db
-      .select()
-      .from(requests)
-      .where(and(eq(requests.reqid, reqid), eq(requests.requesterid, user.id)));
+    const [reqRows] = await pool.execute<RequestRow[]>(
+      `SELECT reqid, requesterid, reqstatus FROM requests WHERE reqid = ? AND requesterid = ? LIMIT 1`,
+      [reqid, user.id]
+    );
 
+    const existingReq = reqRows[0];
     if (!existingReq) {
       return { success: false, error: "Request not found or not owned by you." };
     }
@@ -204,18 +232,19 @@ export async function cancelRequestAction(reqid: number) {
       return { success: false, error: `Cannot cancel a request that is already ${existingReq.reqstatus}.` };
     }
 
-    await db
-      .update(requests)
-      .set({ reqstatus: "CANCELLED" })
-      .where(eq(requests.reqid, reqid));
+    await pool.execute(
+      `UPDATE requests SET reqstatus = 'CANCELLED' WHERE reqid = ?`,
+      [reqid]
+    );
 
     revalidatePath("/dashboard/requests");
     return { success: true, message: "Request cancelled successfully." };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to cancel request:", error);
+    const message = error instanceof Error ? error.message : "Failed to cancel request.";
     return {
       success: false,
-      error: error?.message || "Failed to cancel request.",
+      error: message,
     };
   }
 }

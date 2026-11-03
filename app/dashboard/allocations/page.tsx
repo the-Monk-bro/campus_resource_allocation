@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import db from "@/db";
-import { users, resources, requests, allocations } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import pool from "@/lib/db";
+import { UserRow, AllocationStatus } from "@/lib/types/db";
+import { RowDataPacket } from "mysql2/promise";
 import { redirect } from "next/navigation";
 
 function formatDateTime(date: Date) {
@@ -19,6 +19,19 @@ const statusConfig = {
   CANCELLED: { label: "Cancelled", cls: "bg-slate-700/20 text-slate-400 border-slate-700/40" },
 } as const;
 
+interface AllocationQueryResult extends RowDataPacket {
+  allocationid: number;
+  allocationstatus: AllocationStatus;
+  reqid: number;
+  resid: string;
+  purpose: string | null;
+  starttime: Date;
+  endtime: Date;
+  resourceName: string | null;
+  resourceType: string | null;
+  resourceLocation: string | null;
+}
+
 export default async function AllocationsPage() {
   const session = await getServerSession(authOptions);
 
@@ -26,34 +39,36 @@ export default async function AllocationsPage() {
     redirect("/api/auth/signin");
   }
 
-  const [currentUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, session.user.email));
+  const [userRows] = await pool.execute<UserRow[]>(
+    `SELECT id, name, email FROM users WHERE email = ? LIMIT 1`,
+    [session.user.email]
+  );
 
+  const currentUser = userRows[0];
   if (!currentUser) {
     redirect("/onboarding");
   }
 
   // Fetch allocations for this user's approved requests
-  const dbAllocations = await db
-    .select({
-      allocationid: allocations.allocationid,
-      allocationstatus: allocations.allocationstatus,
-      reqid: requests.reqid,
-      resid: requests.resid,
-      purpose: requests.purpose,
-      starttime: requests.starttime,
-      endtime: requests.endtime,
-      resourceName: resources.name,
-      resourceType: resources.type,
-      resourceLocation: resources.location,
-    })
-    .from(allocations)
-    .innerJoin(requests, eq(allocations.reqid, requests.reqid))
-    .leftJoin(resources, eq(requests.resid, resources.id))
-    .where(eq(requests.requesterid, currentUser.id))
-    .orderBy(desc(requests.starttime));
+  const [dbAllocations] = await pool.execute<AllocationQueryResult[]>(
+    `SELECT
+      a.allocationid,
+      a.allocationstatus,
+      r.reqid,
+      r.resid,
+      r.purpose,
+      r.starttime,
+      r.endtime,
+      res.name AS resourceName,
+      res.type AS resourceType,
+      res.location AS resourceLocation
+     FROM allocations a
+     INNER JOIN requests r ON a.reqid = r.reqid
+     LEFT JOIN resources res ON r.resid = res.id
+     WHERE r.requesterid = ?
+     ORDER BY r.starttime DESC`,
+    [currentUser.id]
+  );
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -89,7 +104,7 @@ export default async function AllocationsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {dbAllocations.map((alloc) => {
-            const cfg = statusConfig[alloc.allocationstatus];
+            const cfg = statusConfig[alloc.allocationstatus] || statusConfig.SCHEDULED;
             return (
               <div
                 key={alloc.allocationid}
@@ -128,11 +143,11 @@ export default async function AllocationsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
                     <div className="text-slate-400">
                       <span className="text-slate-500">From: </span>
-                      <strong className="text-slate-200">{formatDateTime(alloc.starttime)}</strong>
+                      <strong className="text-slate-200">{formatDateTime(new Date(alloc.starttime))}</strong>
                     </div>
                     <div className="text-slate-400">
                       <span className="text-slate-500">To: </span>
-                      <strong className="text-slate-200">{formatDateTime(alloc.endtime)}</strong>
+                      <strong className="text-slate-200">{formatDateTime(new Date(alloc.endtime))}</strong>
                     </div>
                     <div className="text-[11px] text-slate-500 sm:col-span-2">
                       For Request #{alloc.reqid}

@@ -1,19 +1,13 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { users, accounts, sessions, verificationTokens } from "@/db/schema";
-import db from "@/db";
+import pool from "@/lib/db";
+import { MySqlAdapter } from "@/lib/mysqlAdapter";
+import { UserRow } from "@/lib/types/db";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
 
 export const authOptions: NextAuthOptions = {
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  adapter: MySqlAdapter(pool),
   session: {
     strategy: "jwt",
   },
@@ -23,8 +17,8 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      clientId: process.env.AUTH_GOOGLE_ID || "",
+      clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -38,10 +32,12 @@ export const authOptions: NextAuthOptions = {
         }
 
         const email = credentials.email.toLowerCase().trim();
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email));
+        const [rows] = await pool.execute<UserRow[]>(
+          `SELECT id, name, email, image, password FROM users WHERE email = ? LIMIT 1`,
+          [email]
+        );
+
+        const user = rows[0];
 
         if (!user || !user.password) {
           throw new Error("Invalid email or password.");
@@ -70,10 +66,10 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token) {
-        (session.user as any).id = token.id || token.sub;
+        (session.user as { id?: string }).id = (token.id as string) || token.sub;
       }
       return session;
     },
   },
-  secret: process.env.AUTH_SECRET!,
+  secret: process.env.AUTH_SECRET,
 };

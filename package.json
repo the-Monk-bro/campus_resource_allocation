@@ -11,12 +11,10 @@
     "db:reset:minimal": "npx tsx scripts/reset-db-minimal.ts"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^1.11.3",
     "bcryptjs": "^3.0.3",
-    "drizzle-orm": "^0.45.2",
+    "mysql2": "^3.24.6",
     "next": "16.3.4",
     "next-auth": "^4.24.15",
-    "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "web-push": "^3.6.7"
@@ -28,10 +26,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
-    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

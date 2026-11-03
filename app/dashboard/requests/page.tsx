@@ -1,11 +1,38 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import db from "@/db";
-import { users, resources, requests, approval_steps, approval_hierarchies } from "@/db/schema";
-import { eq, desc, asc } from "drizzle-orm";
+import pool from "@/lib/db";
+import { UserRow, ResourceRow, RequestStatus, ResourceStatus } from "@/lib/types/db";
+import { RowDataPacket } from "mysql2/promise";
 import { redirect } from "next/navigation";
 import RequestsView, { RequestRecord, ResourceItem } from "@/components/requests/RequestsView";
 import { ApprovalStepDetail } from "@/components/requests/types";
+
+interface UserRequestQueryResult extends RowDataPacket {
+  reqid: number;
+  requesterid: string;
+  resid: string;
+  purpose: string | null;
+  reqtime: Date;
+  starttime: Date;
+  endtime: Date;
+  reqstatus: RequestStatus;
+  resourceName: string | null;
+  resourceType: string | null;
+  resourceLocation: string | null;
+}
+
+interface StepQueryResult extends RowDataPacket {
+  hid: string;
+  reqid: number;
+  hlevel: number;
+  approverid: string;
+  approverName: string | null;
+  approverEmail: string | null;
+  approvalstatus: "PENDING" | "APPROVED" | "REJECTED";
+  issuetime: Date;
+  actiontime: Date | null;
+  shortcomment: string | null;
+}
 
 export default async function RequestsPage() {
   const session = await getServerSession(authOptions);
@@ -15,64 +42,67 @@ export default async function RequestsPage() {
   }
 
   // Fetch current user
-  const [currentUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, session.user.email));
+  const [userRows] = await pool.execute<UserRow[]>(
+    `SELECT id, name, email FROM users WHERE email = ? LIMIT 1`,
+    [session.user.email]
+  );
 
+  const currentUser = userRows[0];
   if (!currentUser) {
     redirect("/onboarding");
   }
 
   // Fetch all resources available on campus
-  const dbResources = await db.select().from(resources);
+  const [dbResources] = await pool.execute<ResourceRow[]>(
+    `SELECT id, name, type, capacity, location, status FROM resources`
+  );
 
   // Fetch current user's requests joined with resource metadata
-  const dbRequests = await db
-    .select({
-      reqid: requests.reqid,
-      requesterid: requests.requesterid,
-      resid: requests.resid,
-      purpose: requests.purpose,
-      reqtime: requests.reqtime,
-      starttime: requests.starttime,
-      endtime: requests.endtime,
-      reqstatus: requests.reqstatus,
-      resourceName: resources.name,
-      resourceType: resources.type,
-      resourceLocation: resources.location,
-    })
-    .from(requests)
-    .leftJoin(resources, eq(requests.resid, resources.id))
-    .where(eq(requests.requesterid, currentUser.id))
-    .orderBy(desc(requests.reqtime));
+  const [dbRequests] = await pool.execute<UserRequestQueryResult[]>(
+    `SELECT
+      r.reqid,
+      r.requesterid,
+      r.resid,
+      r.purpose,
+      r.reqtime,
+      r.starttime,
+      r.endtime,
+      r.reqstatus,
+      res.name AS resourceName,
+      res.type AS resourceType,
+      res.location AS resourceLocation
+     FROM requests r
+     LEFT JOIN resources res ON r.resid = res.id
+     WHERE r.requesterid = ?
+     ORDER BY r.reqtime DESC`,
+    [currentUser.id]
+  );
 
   // Fetch approval steps for all of this user's requests
   const reqIds = dbRequests.map((r) => r.reqid);
-
-  // Build a map of reqid -> approval steps
   const stepsMap = new Map<number, ApprovalStepDetail[]>();
 
   if (reqIds.length > 0) {
-    // Fetch all steps for these requests in one query
     for (const reqid of reqIds) {
-      const rows = await db
-        .select({
-          hid: approval_steps.hid,
-          hlevel: approval_hierarchies.hlevel,
-          approverid: approval_steps.approverid,
-          approverName: users.name,
-          approverEmail: users.email,
-          approvalstatus: approval_steps.approvalstatus,
-          issuetime: approval_steps.issuetime,
-          actiontime: approval_steps.actiontime,
-          shortcomment: approval_steps.shortcomment,
-        })
-        .from(approval_steps)
-        .innerJoin(approval_hierarchies, eq(approval_steps.hid, approval_hierarchies.hid))
-        .innerJoin(users, eq(approval_steps.approverid, users.id))
-        .where(eq(approval_steps.reqid, reqid))
-        .orderBy(asc(approval_hierarchies.hlevel));
+      const [rows] = await pool.execute<StepQueryResult[]>(
+        `SELECT
+          ast.hid,
+          ast.reqid,
+          ah.hlevel,
+          ast.approverid,
+          u.name AS approverName,
+          u.email AS approverEmail,
+          ast.approvalstatus,
+          ast.issuetime,
+          ast.actiontime,
+          ast.shortcomment
+         FROM approval_steps ast
+         INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
+         INNER JOIN users u ON ast.approverid = u.id
+         WHERE ast.reqid = ?
+         ORDER BY ah.hlevel ASC`,
+        [reqid]
+      );
 
       stepsMap.set(
         reqid,
@@ -83,8 +113,8 @@ export default async function RequestsPage() {
           approverName: r.approverName,
           approverEmail: r.approverEmail,
           approvalstatus: r.approvalstatus,
-          issuetime: r.issuetime.toISOString(),
-          actiontime: r.actiontime ? r.actiontime.toISOString() : null,
+          issuetime: new Date(r.issuetime).toISOString(),
+          actiontime: r.actiontime ? new Date(r.actiontime).toISOString() : null,
           shortcomment: r.shortcomment,
         }))
       );
@@ -97,9 +127,9 @@ export default async function RequestsPage() {
     requesterid: r.requesterid,
     resid: r.resid,
     purpose: r.purpose,
-    reqtime: r.reqtime.toISOString(),
-    starttime: r.starttime.toISOString(),
-    endtime: r.endtime.toISOString(),
+    reqtime: new Date(r.reqtime).toISOString(),
+    starttime: new Date(r.starttime).toISOString(),
+    endtime: new Date(r.endtime).toISOString(),
     reqstatus: r.reqstatus,
     resourceName: r.resourceName,
     resourceType: r.resourceType,
@@ -113,7 +143,7 @@ export default async function RequestsPage() {
     type: res.type,
     capacity: res.capacity,
     location: res.location,
-    status: res.status,
+    status: res.status as ResourceStatus,
   }));
 
   return (

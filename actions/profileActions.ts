@@ -1,8 +1,6 @@
 "use server";
 
-import db from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import pool from "@/lib/db";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -28,14 +26,10 @@ export async function updateProfile(formData: FormData) {
     throw new Error("Phone number must be exactly 10 digits.");
   }
 
-  await db
-    .update(users)
-    .set({
-      department: department,
-      role: role,
-      phno: phno,
-    })
-    .where(eq(users.email, session.user.email));
+  await pool.execute(
+    `UPDATE users SET department = ?, role = ?, phno = ? WHERE email = ?`,
+    [department, role, phno, session.user.email]
+  );
 
   redirect("/dashboard/profile");
 }

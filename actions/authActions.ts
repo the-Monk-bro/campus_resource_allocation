@@ -1,9 +1,9 @@
 "use server";
 
-import db from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import pool from "@/lib/db";
+import { UserRow } from "@/lib/types/db";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 export interface RegisterInput {
   name?: string;
@@ -32,11 +32,12 @@ export async function registerUserAction(input: RegisterInput) {
     }
 
     // Check if user already exists
-    const [existing] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, normalizedEmail));
+    const [rows] = await pool.execute<UserRow[]>(
+      `SELECT id, name, email, password FROM users WHERE email = ? LIMIT 1`,
+      [normalizedEmail]
+    );
 
+    const existing = rows[0];
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (existing) {
@@ -47,27 +48,28 @@ export async function registerUserAction(input: RegisterInput) {
         };
       } else {
         // Linked Google user without password - allow them to set password
-        await db
-          .update(users)
-          .set({
-            password: hashedPassword,
-            name: existing.name || name?.trim() || normalizedEmail.split("@")[0],
-          })
-          .where(eq(users.email, normalizedEmail));
+        const updatedName = existing.name || name?.trim() || normalizedEmail.split("@")[0];
+        await pool.execute(
+          `UPDATE users SET password = ?, name = ? WHERE email = ?`,
+          [hashedPassword, updatedName, normalizedEmail]
+        );
 
         return { success: true, isNew: false };
       }
     }
 
-    await db.insert(users).values({
-      name: name?.trim() || normalizedEmail.split("@")[0],
-      email: normalizedEmail,
-      password: hashedPassword,
-    });
+    const id = crypto.randomUUID();
+    const newName = name?.trim() || normalizedEmail.split("@")[0];
+
+    await pool.execute(
+      `INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)`,
+      [id, newName, normalizedEmail, hashedPassword]
+    );
 
     return { success: true, isNew: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Registration error:", error);
-    return { success: false, error: error.message || "Failed to register account." };
+    const message = error instanceof Error ? error.message : "Failed to register account.";
+    return { success: false, error: message };
   }
 }

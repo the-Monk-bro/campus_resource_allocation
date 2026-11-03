@@ -1,71 +1,67 @@
 import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
-import postgres from "postgres";
-import { execSync } from "child_process";
-import { drizzle } from "drizzle-orm/postgres-js";
+import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
-import {
-  users,
-  resources,
-  approval_hierarchies,
-} from "../db/schema";
+import fs from "fs";
+import path from "path";
 
 async function main() {
-  const dbUrl = process.env.DATABASE_URL;
+  const host = process.env.DB_HOST || "localhost";
+  const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
+  const user = process.env.DB_USER || "root";
+  const password = process.env.DB_PASSWORD || "";
+  const database = process.env.DB_NAME || "campus_resource_allocation";
 
-  if (!dbUrl) {
-    console.error("❌ DATABASE_URL is not set in environment!");
+  console.log(`🔌 Connecting to MySQL server at ${host}:${port}...`);
+
+  let connection: mysql.Connection;
+  try {
+    connection = await mysql.createConnection({
+      host,
+      port,
+      user,
+      password,
+      multipleStatements: true,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("❌ Failed to connect to MySQL server:", message);
     process.exit(1);
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // 1. RESET DATABASE
-  // ────────────────────────────────────────────────────────────────────────────
-  console.log("🧹 Clearing database tables and records...");
-
-  const rawSql = postgres(dbUrl, { max: 1 });
-
   try {
-    await rawSql`DROP SCHEMA public CASCADE;`;
-    await rawSql`CREATE SCHEMA public;`;
-    await rawSql`GRANT ALL ON SCHEMA public TO public;`;
+    console.log(`🧹 Ensuring database \`${database}\` exists and resetting tables...`);
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+    );
+    await connection.changeUser({ database });
 
-    console.log("✅ Database schema cleared successfully!");
-  } catch (error) {
-    console.error("⚠️ Error clearing schema:", error);
-    process.exit(1);
-  } finally {
-    await rawSql.end();
-  }
+    await connection.query(`
+      SET FOREIGN_KEY_CHECKS = 0;
+      DROP TABLE IF EXISTS \`allocations\`;
+      DROP TABLE IF EXISTS \`approval_steps\`;
+      DROP TABLE IF EXISTS \`approval_hierarchies\`;
+      DROP TABLE IF EXISTS \`requests\`;
+      DROP TABLE IF EXISTS \`resources\`;
+      DROP TABLE IF EXISTS \`verificationToken\`;
+      DROP TABLE IF EXISTS \`session\`;
+      DROP TABLE IF EXISTS \`account\`;
+      DROP TABLE IF EXISTS \`users\`;
+      SET FOREIGN_KEY_CHECKS = 1;
+    `);
+    console.log("✅ Database tables dropped successfully!");
 
-  // Recreate the complete schema.
-  // Only users, resources and approval_hierarchies will be seeded below.
-  console.log("🚀 Pushing latest schema with drizzle-kit...");
+    console.log("🚀 Applying schema from schema.sql...");
+    const schemaSql = fs.readFileSync(path.join(process.cwd(), "schema.sql"), "utf-8");
+    await connection.query(schemaSql);
+    console.log("🎉 Database schema applied successfully!");
 
-  try {
-    execSync("npx drizzle-kit push --force", { stdio: "inherit" });
-    console.log("🎉 Database schema push completed successfully!");
-  } catch (error) {
-    console.error("❌ Failed to push schema:", error);
-    process.exit(1);
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // 2. SEED ONLY USERS, RESOURCES AND APPROVAL HIERARCHIES
-  // ────────────────────────────────────────────────────────────────────────────
-  console.log("🌱 Starting minimal seed...");
-
-  const seedClient = postgres(dbUrl, { max: 5 });
-  const db = drizzle(seedClient);
-
-  try {
-    // Default password for all seeded accounts
+    console.log("🌱 Starting minimal seed...");
     const defaultHashedPassword = await bcrypt.hash("password123", 10);
 
     // ── 1. Users ───────────────────────────────────────────────────────────────
     console.log("👥 Seeding users...");
-
     const sampleUsers = [
       {
         id: "usr-admin-01",
@@ -159,203 +155,63 @@ async function main() {
       },
     ];
 
-    await db.insert(users).values(sampleUsers);
-    console.log(
-      `✅ Seeded ${sampleUsers.length} users (default password: "password123").`
-    );
+    for (const u of sampleUsers) {
+      await connection.execute(
+        `INSERT INTO users (id, name, email, password, department, role, phno) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [u.id, u.name, u.email, u.password, u.department, u.role, u.phno]
+      );
+    }
+    console.log(`✅ Seeded ${sampleUsers.length} users (default password: "password123").`);
 
     // ── 2. Resources ──────────────────────────────────────────────────────────
     console.log("🏫 Seeding campus resources...");
-
     const sampleResources = [
-      {
-        id: "LH-101",
-        name: "Lecture Hall 101",
-        type: "Lecture Hall",
-        capacity: 150,
-        location: "LH Complex Ground Floor",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "LH-102",
-        name: "Lecture Hall 102",
-        type: "Lecture Hall",
-        capacity: 150,
-        location: "LH Complex Ground Floor",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "LH-201",
-        name: "Lecture Hall 201 (Amphitheater)",
-        type: "Lecture Hall",
-        capacity: 250,
-        location: "LH Complex 1st Floor",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "LAB-CSE-1",
-        name: "Advanced Computing Lab",
-        type: "Computer Lab",
-        capacity: 60,
-        location: "POD-1D 2nd Floor",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "LAB-AI-GPU",
-        name: "AI & GPU Research Center",
-        type: "Computer Lab",
-        capacity: 40,
-        location: "Titanium Building Rm 204",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "AUDI-MAIN",
-        name: "APJ Abdul Kalam Auditorium",
-        type: "Auditorium",
-        capacity: 800,
-        location: "Central Campus Plaza",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "AUDI-MINI",
-        name: "Mini Auditorium B",
-        type: "Auditorium",
-        capacity: 200,
-        location: "Student Activity Center",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "SEMINAR-A",
-        name: "Department Seminar Hall A",
-        type: "Seminar Room",
-        capacity: 80,
-        location: "School of Innovation Wing B",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "SEMINAR-B",
-        name: "International Conference Hall",
-        type: "Seminar Room",
-        capacity: 120,
-        location: "Admin Block 3rd Floor",
-        status: "MAINTENANCE" as const,
-      },
-      {
-        id: "CR-301",
-        name: "Classroom 301",
-        type: "Classroom",
-        capacity: 50,
-        location: "POD-1A 3rd Floor",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "SPORTS-ARENA",
-        name: "Indoor Sports Complex",
-        type: "Sports Arena",
-        capacity: 300,
-        location: "Gymkhana Sports Zone",
-        status: "AVAILABLE" as const,
-      },
-      {
-        id: "WORKSHOP-04",
-        name: "Mechanical Fabrication Workshop",
-        type: "Workshop",
-        capacity: 35,
-        location: "Heavy Engineering Shed 4",
-        status: "RETIRED" as const,
-      },
+      { id: "LH-101", name: "Lecture Hall 101", type: "Lecture Hall", capacity: 150, location: "LH Complex Ground Floor", status: "AVAILABLE" },
+      { id: "LH-102", name: "Lecture Hall 102", type: "Lecture Hall", capacity: 150, location: "LH Complex Ground Floor", status: "AVAILABLE" },
+      { id: "LH-201", name: "Lecture Hall 201 (Amphitheater)", type: "Lecture Hall", capacity: 250, location: "LH Complex 1st Floor", status: "AVAILABLE" },
+      { id: "LAB-CSE-1", name: "Advanced Computing Lab", type: "Computer Lab", capacity: 60, location: "POD-1D 2nd Floor", status: "AVAILABLE" },
+      { id: "LAB-AI-GPU", name: "AI & GPU Research Center", type: "Computer Lab", capacity: 40, location: "Titanium Building Rm 204", status: "AVAILABLE" },
+      { id: "AUDI-MAIN", name: "APJ Abdul Kalam Auditorium", type: "Auditorium", capacity: 800, location: "Central Campus Plaza", status: "AVAILABLE" },
+      { id: "AUDI-MINI", name: "Mini Auditorium B", type: "Auditorium", capacity: 200, location: "Student Activity Center", status: "AVAILABLE" },
+      { id: "SEMINAR-A", name: "Department Seminar Hall A", type: "Seminar Room", capacity: 80, location: "School of Innovation Wing B", status: "AVAILABLE" },
+      { id: "SEMINAR-B", name: "International Conference Hall", type: "Seminar Room", capacity: 120, location: "Admin Block 3rd Floor", status: "MAINTENANCE" },
+      { id: "CR-301", name: "Classroom 301", type: "Classroom", capacity: 50, location: "POD-1A 3rd Floor", status: "AVAILABLE" },
+      { id: "SPORTS-ARENA", name: "Indoor Sports Complex", type: "Sports Arena", capacity: 300, location: "Gymkhana Sports Zone", status: "AVAILABLE" },
+      { id: "WORKSHOP-04", name: "Mechanical Fabrication Workshop", type: "Workshop", capacity: 35, location: "Heavy Engineering Shed 4", status: "RETIRED" },
     ];
 
-    await db.insert(resources).values(sampleResources);
+    for (const r of sampleResources) {
+      await connection.execute(
+        `INSERT INTO resources (id, name, type, capacity, location, status) VALUES (?, ?, ?, ?, ?, ?)`,
+        [r.id, r.name, r.type, r.capacity, r.location, r.status]
+      );
+    }
     console.log(`✅ Seeded ${sampleResources.length} campus resources.`);
 
     // ── 3. Approval Hierarchies ────────────────────────────────────────────────
     console.log("🏛️ Seeding approval hierarchies...");
-
     const sampleHierarchies = [
-      // AUDITORIUM: 3-level hierarchy
-      {
-        hid: "H-AUDI-L1",
-        hlevel: 1,
-        approverid: "usr-admin-01",
-        resid: "AUDI-MAIN",
-      },
-      {
-        hid: "H-AUDI-L2",
-        hlevel: 2,
-        approverid: "usr-gensec-01",
-        resid: "AUDI-MAIN",
-      },
-      {
-        hid: "H-AUDI-L3",
-        hlevel: 3,
-        approverid: "usr-pres-01",
-        resid: "AUDI-MAIN",
-      },
-
-      // LECTURE HALL 201: single-level hierarchy
-      {
-        hid: "H-LH201-L1",
-        hlevel: 1,
-        approverid: "usr-faculty-01",
-        resid: "LH-201",
-      },
-
-      // Other resources with simple one-level approval
-      {
-        hid: "H-LH101-L1",
-        hlevel: 1,
-        approverid: "usr-faculty-01",
-        resid: "LH-101",
-      },
-      {
-        hid: "H-LH102-L1",
-        hlevel: 1,
-        approverid: "usr-staff-01",
-        resid: "LH-102",
-      },
-      {
-        hid: "H-LABCSE-L1",
-        hlevel: 1,
-        approverid: "usr-admin-01",
-        resid: "LAB-CSE-1",
-      },
-      {
-        hid: "H-AI-L1",
-        hlevel: 1,
-        approverid: "usr-admin-01",
-        resid: "LAB-AI-GPU",
-      },
-      {
-        hid: "H-SPORT-L1",
-        hlevel: 1,
-        approverid: "usr-gensec-01",
-        resid: "SPORTS-ARENA",
-      },
-      {
-        hid: "H-SPORT-L2",
-        hlevel: 2,
-        approverid: "usr-pres-01",
-        resid: "SPORTS-ARENA",
-      },
-      {
-        hid: "H-SEMA-L1",
-        hlevel: 1,
-        approverid: "usr-faculty-01",
-        resid: "SEMINAR-A",
-      },
-      {
-        hid: "H-CR301-L1",
-        hlevel: 1,
-        approverid: "usr-faculty-01",
-        resid: "CR-301",
-      },
+      { hid: "H-AUDI-L1",   hlevel: 1, approverid: "usr-admin-01",   resid: "AUDI-MAIN" },
+      { hid: "H-AUDI-L2",   hlevel: 2, approverid: "usr-gensec-01",  resid: "AUDI-MAIN" },
+      { hid: "H-AUDI-L3",   hlevel: 3, approverid: "usr-pres-01",    resid: "AUDI-MAIN" },
+      { hid: "H-LH201-L1",  hlevel: 1, approverid: "usr-faculty-01", resid: "LH-201" },
+      { hid: "H-LH101-L1",  hlevel: 1, approverid: "usr-faculty-01", resid: "LH-101" },
+      { hid: "H-LH102-L1",  hlevel: 1, approverid: "usr-staff-01",   resid: "LH-102" },
+      { hid: "H-LABCSE-L1", hlevel: 1, approverid: "usr-admin-01",   resid: "LAB-CSE-1" },
+      { hid: "H-AI-L1",     hlevel: 1, approverid: "usr-admin-01",   resid: "LAB-AI-GPU" },
+      { hid: "H-SPORT-L1",  hlevel: 1, approverid: "usr-gensec-01",  resid: "SPORTS-ARENA" },
+      { hid: "H-SPORT-L2",  hlevel: 2, approverid: "usr-pres-01",    resid: "SPORTS-ARENA" },
+      { hid: "H-SEMA-L1",   hlevel: 1, approverid: "usr-faculty-01", resid: "SEMINAR-A" },
+      { hid: "H-CR301-L1",  hlevel: 1, approverid: "usr-faculty-01", resid: "CR-301" },
     ];
 
-    await db.insert(approval_hierarchies).values(sampleHierarchies);
-    console.log(
-      `✅ Seeded ${sampleHierarchies.length} approval hierarchy records.`
-    );
+    for (const h of sampleHierarchies) {
+      await connection.execute(
+        `INSERT INTO approval_hierarchies (hid, hlevel, approverid, resid) VALUES (?, ?, ?, ?)`,
+        [h.hid, h.hlevel, h.approverid, h.resid]
+      );
+    }
+    console.log(`✅ Seeded ${sampleHierarchies.length} approval hierarchy records.`);
 
     console.log("\n🎉 Database reset and minimal seeding completed!");
     console.log("-------------------------------------------------------");
@@ -374,7 +230,7 @@ async function main() {
     console.error("❌ Error during seeding:", error);
     process.exit(1);
   } finally {
-    await seedClient.end();
+    await connection.end();
   }
 }
 
