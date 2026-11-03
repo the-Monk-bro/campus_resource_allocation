@@ -12,9 +12,40 @@ export interface UserRow extends RowDataPacket {
   emailVerified: Date | null;
   image: string | null;
   password: string | null;
-  department: string | null;
-  role: string | null;
   phno: string | null;
+}
+
+export interface RoleRow extends RowDataPacket {
+  RoleId: string;
+  RoleName: string;
+}
+
+export interface ScopeRow extends RowDataPacket {
+  ScopeId: string;
+  ScopeName: string;
+  ScopeType: string;
+}
+
+export interface RoleAssignmentRow extends RowDataPacket {
+  AssignmentId: number;
+  UserId: string;
+  RoleId: string;
+  ScopeId: string;
+  ValidFrom: Date;
+  ValidUntil: Date | null;
+}
+
+export interface UserRoleAssignmentDetail extends RowDataPacket {
+  AssignmentId: number;
+  UserId: string;
+  RoleId: string;
+  RoleName: string;
+  ScopeId: string;
+  ScopeName: string;
+  ScopeType: string;
+  ValidFrom: Date;
+  ValidUntil: Date | null;
+  isActive: boolean;
 }
 
 export interface AccountRow extends RowDataPacket {
@@ -55,6 +86,7 @@ export interface ResourceRow extends RowDataPacket {
 export interface RequestRow extends RowDataPacket {
   reqid: number;
   requesterid: string;
+  RequesterAssignmentId: number;
   resid: string;
   purpose: string | null;
   reqtime: Date;
@@ -66,14 +98,17 @@ export interface RequestRow extends RowDataPacket {
 export interface ApprovalHierarchyRow extends RowDataPacket {
   hid: string;
   hlevel: number;
-  approverid: string;
   resid: string;
+  RoleId: string;
+  ScopeId: string;
 }
 
 export interface ApprovalStepRow extends RowDataPacket {
   hid: string;
   reqid: number;
   approverid: string;
+  ActionByUserId: string | null;
+  ActionAsAssignmentId: number | null;
   issuetime: Date;
   actiontime: Date | null;
   shortcomment: string | null;
@@ -85,4 +120,3 @@ export interface AllocationRow extends RowDataPacket {
   reqid: number;
   allocationstatus: AllocationStatus;
 }
-

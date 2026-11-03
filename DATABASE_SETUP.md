@@ -93,11 +93,6 @@ DB_NAME=campus_resource_allocation
 AUTH_SECRET=your_secret_key
 AUTH_GOOGLE_ID=your_google_client_id
 AUTH_GOOGLE_SECRET=your_google_client_secret
-
-# Web Push Notifications
-VAPID_PUBLIC_KEY=your_vapid_public_key
-VAPID_PRIVATE_KEY=your_vapid_private_key
-VAPID_SUBJECT=mailto:admin@campus.edu
 ```
 
 > **Note:** If your root user has no password, leave `DB_PASSWORD=` empty.
@@ -144,4 +139,3 @@ To verify that your MySQL database connection works:
    - `/dashboard/approvals` to verify multi-level approval workflows.
    - `/dashboard/allocations` to view confirmed allocations.
    - `/dashboard/profile` to view and update user profile details.
-

@@ -2,6 +2,7 @@
 
 import pool from "@/lib/db";
 import { UserRow } from "@/lib/types/db";
+import { ApprovalStepDetail } from "@/components/requests/types";
 import { RowDataPacket } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -11,26 +12,20 @@ import { revalidatePath } from "next/cache";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface ApprovalStepDetail {
-  hid: string;
-  hlevel: number;
-  approverid: string;
-  approverName: string | null;
-  approverEmail: string | null;
-  approvalstatus: "PENDING" | "APPROVED" | "REJECTED";
-  issuetime: string;
-  actiontime: string | null;
-  shortcomment: string | null;
-}
-
 export interface PendingApprovalItem {
   hid: string;
   reqid: number;
   hlevel: number;
+  roleName: string;
+  scopeName: string;
+  scopeType: string;
   // Request details
   requesterid: string;
   requesterName: string | null;
   requesterEmail: string | null;
+  requesterRoleName: string | null;
+  requesterScopeName: string | null;
+  requesterScopeType?: string | null;
   resid: string;
   resourceName: string | null;
   resourceLocation: string | null;
@@ -44,9 +39,16 @@ export interface PendingApprovalItem {
 interface StepDetailQueryResult extends RowDataPacket {
   hid: string;
   hlevel: number;
+  roleId: string;
+  roleName: string;
+  scopeId: string;
+  scopeName: string;
+  scopeType: string;
   approverid: string;
   approverName: string | null;
   approverEmail: string | null;
+  actionByUserId: string | null;
+  actionByName: string | null;
   approvalstatus: "PENDING" | "APPROVED" | "REJECTED";
   issuetime: Date;
   actiontime: Date | null;
@@ -64,16 +66,26 @@ export async function getApprovalStepsForRequestAction(
       `SELECT
         ast.hid,
         ah.hlevel,
+        r.RoleId AS roleId,
+        r.RoleName AS roleName,
+        s.ScopeId AS scopeId,
+        s.ScopeName AS scopeName,
+        s.ScopeType AS scopeType,
         ast.approverid,
         u.name AS approverName,
         u.email AS approverEmail,
+        ast.ActionByUserId AS actionByUserId,
+        uAction.name AS actionByName,
         ast.approvalstatus,
         ast.issuetime,
         ast.actiontime,
         ast.shortcomment
        FROM approval_steps ast
        INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
+       INNER JOIN roles r ON ah.RoleId = r.RoleId
+       INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
        INNER JOIN users u ON ast.approverid = u.id
+       LEFT JOIN users uAction ON ast.ActionByUserId = uAction.id
        WHERE ast.reqid = ?
        ORDER BY ah.hlevel ASC`,
       [reqid]
@@ -84,9 +96,16 @@ export async function getApprovalStepsForRequestAction(
       steps: rows.map((r) => ({
         hid: r.hid,
         hlevel: r.hlevel,
+        roleId: r.roleId,
+        roleName: r.roleName,
+        scopeId: r.scopeId,
+        scopeName: r.scopeName,
+        scopeType: r.scopeType,
         approverid: r.approverid,
         approverName: r.approverName,
         approverEmail: r.approverEmail,
+        actionByUserId: r.actionByUserId,
+        actionByName: r.actionByName,
         approvalstatus: r.approvalstatus,
         issuetime: new Date(r.issuetime).toISOString(),
         actiontime: r.actiontime ? new Date(r.actiontime).toISOString() : null,
@@ -104,6 +123,9 @@ interface PendingStepQueryResult extends RowDataPacket {
   hid: string;
   reqid: number;
   hlevel: number;
+  roleName: string;
+  scopeName: string;
+  scopeType: string;
   resid: string;
   issuetime: Date;
 }
@@ -118,6 +140,7 @@ interface StepStatusQueryResult extends RowDataPacket {
 // Only shows steps where:
 //   - approverid = current user
 //   - approvalstatus = PENDING
+//   - User still holds an active assignment for the required role & scope
 //   - All lower-level steps for the same request are APPROVED (or level 1)
 // ---------------------------------------------------------------------------
 export async function getMyPendingApprovalsAction(): Promise<
@@ -139,19 +162,29 @@ export async function getMyPendingApprovalsAction(): Promise<
       return { success: false, error: "User not found." };
     }
 
-    // Get all PENDING steps assigned to this approver
+    // Get all PENDING steps assigned to this user where the user still has an active matching assignment
     const [pendingSteps] = await pool.execute<PendingStepQueryResult[]>(
       `SELECT
         ast.hid,
         ast.reqid,
         ah.hlevel,
+        r.RoleName AS roleName,
+        s.ScopeName AS scopeName,
+        s.ScopeType AS scopeType,
         ah.resid,
         ast.issuetime
        FROM approval_steps ast
        INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
-       WHERE ast.approverid = ? AND ast.approvalstatus = 'PENDING'
+       INNER JOIN roles r ON ah.RoleId = r.RoleId
+       INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
+       INNER JOIN role_assignments ra ON ra.RoleId = ah.RoleId AND ra.ScopeId = ah.ScopeId
+       WHERE ast.approverid = ?
+         AND ast.approvalstatus = 'PENDING'
+         AND ra.UserId = ?
+         AND ra.ValidFrom <= NOW()
+         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
        ORDER BY ast.issuetime ASC`,
-      [currentUser.id]
+      [currentUser.id, currentUser.id]
     );
 
     // For each pending step, check if previous levels are all approved
@@ -160,7 +193,15 @@ export async function getMyPendingApprovalsAction(): Promise<
     for (const step of pendingSteps) {
       // If this is level 1, no prerequisites
       if (step.hlevel === 1) {
-        const item = await buildApprovalItem(step.hid, step.reqid, step.hlevel, new Date(step.issuetime));
+        const item = await buildApprovalItem(
+          step.hid,
+          step.reqid,
+          step.hlevel,
+          step.roleName,
+          step.scopeName,
+          step.scopeType,
+          new Date(step.issuetime)
+        );
         if (item) eligibleItems.push(item);
         continue;
       }
@@ -186,7 +227,15 @@ export async function getMyPendingApprovalsAction(): Promise<
         .every(([, status]) => status === "APPROVED");
 
       if (allPreviousApproved) {
-        const item = await buildApprovalItem(step.hid, step.reqid, step.hlevel, new Date(step.issuetime));
+        const item = await buildApprovalItem(
+          step.hid,
+          step.reqid,
+          step.hlevel,
+          step.roleName,
+          step.scopeName,
+          step.scopeType,
+          new Date(step.issuetime)
+        );
         if (item) eligibleItems.push(item);
       }
     }
@@ -204,6 +253,9 @@ interface BuildApprovalItemQueryResult extends RowDataPacket {
   requesterid: string;
   requesterName: string | null;
   requesterEmail: string | null;
+  requesterRoleName: string | null;
+  requesterScopeName: string | null;
+  requesterScopeType?: string | null;
   resid: string;
   resourceName: string | null;
   resourceLocation: string | null;
@@ -217,6 +269,9 @@ async function buildApprovalItem(
   hid: string,
   reqid: number,
   hlevel: number,
+  roleName: string,
+  scopeName: string,
+  scopeType: string,
   issuetime: Date
 ): Promise<PendingApprovalItem | null> {
   const [rows] = await pool.execute<BuildApprovalItemQueryResult[]>(
@@ -225,6 +280,9 @@ async function buildApprovalItem(
       r.requesterid,
       u.name AS requesterName,
       u.email AS requesterEmail,
+      reqRole.RoleName AS requesterRoleName,
+      reqScope.ScopeName AS requesterScopeName,
+      reqScope.ScopeType AS requesterScopeType,
       r.resid,
       res.name AS resourceName,
       res.location AS resourceLocation,
@@ -234,6 +292,9 @@ async function buildApprovalItem(
       r.reqtime
      FROM requests r
      INNER JOIN users u ON r.requesterid = u.id
+     LEFT JOIN role_assignments reqRa ON r.RequesterAssignmentId = reqRa.AssignmentId
+     LEFT JOIN roles reqRole ON reqRa.RoleId = reqRole.RoleId
+     LEFT JOIN scopes reqScope ON reqRa.ScopeId = reqScope.ScopeId
      LEFT JOIN resources res ON r.resid = res.id
      WHERE r.reqid = ?
      LIMIT 1`,
@@ -247,9 +308,15 @@ async function buildApprovalItem(
     hid,
     reqid: r.reqid,
     hlevel,
+    roleName,
+    scopeName,
+    scopeType,
     requesterid: r.requesterid,
     requesterName: r.requesterName,
     requesterEmail: r.requesterEmail,
+    requesterRoleName: r.requesterRoleName,
+    requesterScopeName: r.requesterScopeName,
+    requesterScopeType: r.requesterScopeType,
     resid: r.resid,
     resourceName: r.resourceName,
     resourceLocation: r.resourceLocation,
@@ -293,24 +360,45 @@ export async function actOnApprovalAction(input: {
       return { success: false, error: "User not found." };
     }
 
-    // Verify this step belongs to the current user and is PENDING
+    // Verify this step exists and is PENDING
     const [stepRows] = await pool.execute<ApprovalStepCheckRow[]>(
       `SELECT hid, reqid, approverid, approvalstatus
        FROM approval_steps
-       WHERE hid = ? AND reqid = ? AND approverid = ?
+       WHERE hid = ? AND reqid = ?
        LIMIT 1`,
-      [input.hid, input.reqid, currentUser.id]
+      [input.hid, input.reqid]
     );
 
     const step = stepRows[0];
     if (!step) {
-      return { success: false, error: "Approval step not found or not assigned to you." };
+      return { success: false, error: "Approval step not found." };
     }
 
     if (step.approvalstatus !== "PENDING") {
       return { success: false, error: `This step has already been ${step.approvalstatus}.` };
     }
 
+    // Verify user holds an active role assignment matching the hierarchy's required role & scope
+    const [assignRows] = await pool.execute<RowDataPacket[]>(
+      `SELECT ra.AssignmentId
+       FROM role_assignments ra
+       INNER JOIN approval_hierarchies ah ON ah.RoleId = ra.RoleId AND ah.ScopeId = ra.ScopeId
+       WHERE ah.hid = ?
+         AND ra.UserId = ?
+         AND ra.ValidFrom <= NOW()
+         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
+       LIMIT 1`,
+      [input.hid, currentUser.id]
+    );
+
+    if (!assignRows || assignRows.length === 0) {
+      return {
+        success: false,
+        error: "Unauthorized: You do not hold an active role assignment authorized to approve this step.",
+      };
+    }
+
+    const activeAssignmentId = assignRows[0].AssignmentId;
     const newStatus = input.action === "APPROVE" ? "APPROVED" : "REJECTED";
     const now = new Date();
     const shortcomment = input.comment?.trim().substring(0, 100) || null;
@@ -320,12 +408,12 @@ export async function actOnApprovalAction(input: {
     try {
       await conn.beginTransaction();
 
-      // Update the step
+      // Update the step with ActionByUserId and ActionAsAssignmentId
       await conn.execute(
         `UPDATE approval_steps
-         SET approvalstatus = ?, actiontime = ?, shortcomment = ?
+         SET approvalstatus = ?, actiontime = ?, shortcomment = ?, ActionByUserId = ?, ActionAsAssignmentId = ?
          WHERE hid = ? AND reqid = ?`,
-        [newStatus, now, shortcomment, input.hid, input.reqid]
+        [newStatus, now, shortcomment, currentUser.id, activeAssignmentId, input.hid, input.reqid]
       );
 
       if (input.action === "REJECT") {

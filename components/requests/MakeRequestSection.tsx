@@ -2,16 +2,18 @@
 
 import { useState, useTransition, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createRequestAction, getApprovalHierarchyAction, ApproverInfo } from "@/actions/requestActions";
-import { ResourceItem } from "./types";
+import { createRequestAction, getApprovalHierarchyAction } from "@/actions/requestActions";
+import { ResourceItem, UserActiveRoleAssignment, ApproverInfo } from "./types";
 
 interface MakeRequestSectionProps {
   resources: ResourceItem[];
+  activeAssignments?: UserActiveRoleAssignment[];
   onSwitchToMyRequests?: () => void;
 }
 
 export default function MakeRequestSection({
   resources,
+  activeAssignments = [],
   onSwitchToMyRequests,
 }: MakeRequestSectionProps) {
   const router = useRouter();
@@ -20,6 +22,9 @@ export default function MakeRequestSection({
   const [selectedResId, setSelectedResId] = useState<string>(resources[0]?.id || "");
   const [customResId, setCustomResId] = useState<string>("");
   const [isCustomResource, setIsCustomResource] = useState<boolean>(false);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | "">(
+    activeAssignments[0]?.assignmentId ?? ""
+  );
   const [purpose, setPurpose] = useState<string>("");
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
@@ -33,15 +38,26 @@ export default function MakeRequestSection({
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isSubmitting, startSubmitTransition] = useTransition();
 
+  // Sync selectedAssignmentId when activeAssignments changes
+  useEffect(() => {
+    if (activeAssignments.length > 0) {
+      if (selectedAssignmentId === "" || !activeAssignments.some((a) => a.assignmentId === selectedAssignmentId)) {
+        setSelectedAssignmentId(activeAssignments[0].assignmentId);
+      }
+    }
+  }, [activeAssignments, selectedAssignmentId]);
+
   // Validation
   const effectiveResId = isCustomResource ? customResId.trim() : selectedResId;
   const isTimeOrderValid =
     !startTime || !endTime || new Date(endTime).getTime() > new Date(startTime).getTime();
+  const hasActiveAssignments = activeAssignments.length > 0 && selectedAssignmentId !== "";
   const isFormValid =
     Boolean(effectiveResId) &&
     Boolean(startTime) &&
     Boolean(endTime) &&
-    isTimeOrderValid;
+    isTimeOrderValid &&
+    hasActiveAssignments;
 
   // Selected Resource details
   const selectedResourceDetails = useMemo(() => {
@@ -76,6 +92,11 @@ export default function MakeRequestSection({
       return;
     }
 
+    if (!selectedAssignmentId) {
+      setFormError("Please select a role to request as. An active role assignment is required.");
+      return;
+    }
+
     if (!startTime || !endTime) {
       setFormError("Both start time and end time are required.");
       return;
@@ -89,6 +110,7 @@ export default function MakeRequestSection({
     startSubmitTransition(async () => {
       const res = await createRequestAction({
         resid: effectiveResId,
+        assignmentId: Number(selectedAssignmentId),
         purpose: purpose.trim() || undefined,
         starttime: startTime,
         endtime: endTime,
@@ -221,6 +243,54 @@ export default function MakeRequestSection({
                 required
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
               />
+            )}
+          </div>
+
+          {/* Requesting As (Role Assignment) */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold text-slate-200">
+                Requesting As <span className="text-rose-400">*</span>
+              </label>
+              {activeAssignments.length > 0 && (
+                <span className="text-xs text-indigo-400">
+                  {activeAssignments.length} active {activeAssignments.length === 1 ? "role" : "roles"}
+                </span>
+              )}
+            </div>
+
+            {activeAssignments.length > 0 ? (
+              <select
+                value={selectedAssignmentId}
+                onChange={(e) => setSelectedAssignmentId(Number(e.target.value))}
+                required
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+              >
+                {activeAssignments.map((a) => (
+                  <option key={a.assignmentId} value={a.assignmentId} className="bg-slate-900 text-slate-100">
+                    {a.roleName} — {a.scopeName}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 shrink-0 text-amber-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <span>
+                  No active role assignments found. You need an active role assignment to submit requests.
+                </span>
+              </div>
             )}
           </div>
 
@@ -415,19 +485,26 @@ export default function MakeRequestSection({
                 ) : approvers.length === 0 ? (
                   <p className="text-[11px] text-slate-500 italic">No approval hierarchy configured for this resource.</p>
                 ) : (
-                  <ol className="space-y-2">
+                  <ol className="space-y-2.5">
                     {approvers.map((approver, idx) => (
                       <li key={approver.hid} className="flex items-start gap-2.5">
                         {/* Level Badge */}
                         <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-bold flex items-center justify-center mt-0.5">
                           {approver.hlevel}
                         </span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold text-slate-200 truncate">
-                            {approver.approverName || "Unknown"}
+                            {approver.roleName} &bull; {approver.scopeName}
                           </p>
-                          <p className="text-[10px] text-slate-500 truncate">
-                            {[approver.approverRole, approver.approverDepartment].filter(Boolean).join(" · ") || approver.approverEmail || "—"}
+                          <p className="text-[10px] text-slate-400 truncate">
+                            {approver.currentApproverName ? (
+                              <span>
+                                {approver.currentApproverName}
+                                {approver.currentApproverEmail ? ` (${approver.currentApproverEmail})` : ""}
+                              </span>
+                            ) : (
+                              <span className="text-amber-400/80 italic">No active approver currently assigned</span>
+                            )}
                           </p>
                         </div>
                         {/* Connector arrow (not on last item) */}
@@ -452,6 +529,7 @@ export default function MakeRequestSection({
         <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 text-xs text-slate-400 space-y-3">
           <h4 className="font-bold text-slate-200 text-sm">Booking Guidelines</h4>
           <ul className="space-y-2 list-disc list-inside text-slate-400">
+            <li>Select an active role assignment under which you are submitting the request.</li>
             <li>Both start and end dates and times are required.</li>
             <li>Provide a short purpose to expedite reviewer approval.</li>
             <li>You can view and track your requests anytime in &ldquo;My Requests&rdquo;.</li>

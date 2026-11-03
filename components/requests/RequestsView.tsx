@@ -3,13 +3,14 @@
 import { useState } from "react";
 import MakeRequestSection from "./MakeRequestSection";
 import MyRequestsSection from "./MyRequestsSection";
-import { ResourceItem, RequestRecord } from "./types";
+import { ResourceItem, RequestRecord, UserActiveRoleAssignment } from "./types";
 
-export type { ResourceItem, RequestRecord };
+export type { ResourceItem, RequestRecord, UserActiveRoleAssignment };
 
 interface RequestsViewProps {
   resources: ResourceItem[];
   initialRequests: RequestRecord[];
+  activeAssignments?: UserActiveRoleAssignment[];
   currentUserId: string;
   currentUserName: string;
 }
@@ -19,6 +20,7 @@ type TabType = "make" | "my";
 export default function RequestsView({
   resources,
   initialRequests,
+  activeAssignments = [],
   currentUserId,
   currentUserName,
 }: RequestsViewProps) {
@@ -100,6 +102,7 @@ export default function RequestsView({
       {activeTab === "make" ? (
         <MakeRequestSection
           resources={resources}
+          activeAssignments={activeAssignments}
           onSwitchToMyRequests={() => setActiveTab("my")}
         />
       ) : (

@@ -98,12 +98,20 @@ function ApprovalStepsDropdown({ steps }: { steps: ApprovalStepDetail[] }) {
                   <div>
                     <p className="text-xs font-semibold text-slate-200">
                       Level {step.hlevel}
-                      {step.approverName && (
-                        <span className="font-normal text-slate-400 ml-1.5">— {step.approverName}</span>
+                      {step.roleName && (
+                        <span className="text-indigo-400 font-medium ml-1.5">
+                          — {step.roleName}{step.scopeName ? ` (${step.scopeName})` : ""}
+                        </span>
                       )}
                     </p>
-                    {step.approverEmail && (
-                      <p className="text-[11px] text-slate-500">{step.approverEmail}</p>
+                    <p className="text-[11px] text-slate-400">
+                      Approver: {step.approverName || "Pending Assignment"}
+                      {step.approverEmail ? ` (${step.approverEmail})` : ""}
+                    </p>
+                    {step.actionByName && step.actionByName !== step.approverName && (
+                      <p className="text-[10px] text-slate-500">
+                        Acted by: {step.actionByName}
+                      </p>
                     )}
                   </div>
                   <span
@@ -451,6 +459,19 @@ export default function MyRequestsSection({
                         </span>
                       )}
                     </div>
+
+                    {/* Role & Scope Badge */}
+                    {(req.requesterRoleName || req.requesterScopeName) && (
+                      <div className="flex items-center gap-1.5 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-xl w-fit">
+                        <span className="text-slate-400 text-[11px]">Requested as:</span>
+                        <span className="font-semibold">{req.requesterRoleName || "Unknown Role"}</span>
+                        {req.requesterScopeName && (
+                          <span className="text-indigo-400 font-normal">
+                            • {req.requesterScopeName}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     {req.purpose ? (
                       <p className="text-sm text-slate-300 italic bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">

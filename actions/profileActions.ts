@@ -12,23 +12,16 @@ export async function updateProfile(formData: FormData) {
     throw new Error("Unauthorized");
   }
 
-  const department = (formData.get("department") as string)?.trim();
-  const role = (formData.get("role") as string)?.trim();
   const phno = (formData.get("phno") as string)?.trim();
 
-  // Validate all fields are non-empty
-  if (!department || !role || !phno) {
-    throw new Error("All input fields are required.");
-  }
-
   // Validate phone number length (exactly 10 digits)
-  if (phno.length !== 10 || !/^\d{10}$/.test(phno)) {
+  if (!phno || phno.length !== 10 || !/^\d{10}$/.test(phno)) {
     throw new Error("Phone number must be exactly 10 digits.");
   }
 
   await pool.execute(
-    `UPDATE users SET department = ?, role = ?, phno = ? WHERE email = ?`,
-    [department, role, phno, session.user.email]
+    `UPDATE users SET phno = ? WHERE email = ?`,
+    [phno, session.user.email]
   );
 
   redirect("/dashboard/profile");

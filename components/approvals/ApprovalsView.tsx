@@ -64,7 +64,7 @@ function ApprovalCard({ item }: { item: PendingApprovalItem }) {
               {item.resourceName || item.resid}
             </h3>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-              Level {item.hlevel} Approval
+              Level {item.hlevel} Approval ({item.roleName} &bull; {item.scopeName})
             </span>
             {item.resourceLocation && (
               <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -76,17 +76,31 @@ function ApprovalCard({ item }: { item: PendingApprovalItem }) {
             )}
           </div>
 
-          {/* Requester info */}
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span>
-              Requested by <strong className="text-slate-200">{item.requesterName || "Unknown"}</strong>
-              {item.requesterEmail && (
-                <span className="text-slate-500 ml-1">({item.requesterEmail})</span>
-              )}
-            </span>
+          {/* Requester info & Requested As tag */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>
+                Requested by <strong className="text-slate-200">{item.requesterName || "Unknown"}</strong>
+                {item.requesterEmail && (
+                  <span className="text-slate-500 ml-1">({item.requesterEmail})</span>
+                )}
+              </span>
+            </div>
+
+            {(item.requesterRoleName || item.requesterScopeName) && (
+              <div className="flex items-center gap-1.5 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-xl">
+                <span className="text-slate-400 text-[11px]">Requested as:</span>
+                <span className="font-semibold text-indigo-200">{item.requesterRoleName || "Unknown Role"}</span>
+                {item.requesterScopeName && (
+                  <span className="text-indigo-400 font-normal">
+                    &bull; {item.requesterScopeName}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Purpose */}
