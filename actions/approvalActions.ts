@@ -328,15 +328,10 @@ async function buildApprovalItem(
   };
 }
 
-interface ApprovalStepCheckRow extends RowDataPacket {
-  hid: string;
-  reqid: number;
-  approverid: string;
-  approvalstatus: string;
-}
-
 // ---------------------------------------------------------------------------
 // Act on an approval step: approve or reject
+// Handled directly by MySQL stored procedure sp_process_approval_action
+// and workflow triggers (trg_enforce_sequential_approval, trg_approval_step_after_update)
 // ---------------------------------------------------------------------------
 export async function actOnApprovalAction(input: {
   hid: string;
@@ -360,117 +355,38 @@ export async function actOnApprovalAction(input: {
       return { success: false, error: "User not found." };
     }
 
-    // Verify this step exists and is PENDING
-    const [stepRows] = await pool.execute<ApprovalStepCheckRow[]>(
-      `SELECT hid, reqid, approverid, approvalstatus
-       FROM approval_steps
-       WHERE hid = ? AND reqid = ?
-       LIMIT 1`,
-      [input.hid, input.reqid]
-    );
-
-    const step = stepRows[0];
-    if (!step) {
-      return { success: false, error: "Approval step not found." };
-    }
-
-    if (step.approvalstatus !== "PENDING") {
-      return { success: false, error: `This step has already been ${step.approvalstatus}.` };
-    }
-
-    // Verify user holds an active role assignment matching the hierarchy's required role & scope
-    const [assignRows] = await pool.execute<RowDataPacket[]>(
-      `SELECT ra.AssignmentId
-       FROM role_assignments ra
-       INNER JOIN approval_hierarchies ah ON ah.RoleId = ra.RoleId AND ah.ScopeId = ra.ScopeId
-       WHERE ah.hid = ?
-         AND ra.UserId = ?
-         AND ra.ValidFrom <= NOW()
-         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
-       LIMIT 1`,
-      [input.hid, currentUser.id]
-    );
-
-    if (!assignRows || assignRows.length === 0) {
-      return {
-        success: false,
-        error: "Unauthorized: You do not hold an active role assignment authorized to approve this step.",
-      };
-    }
-
-    const activeAssignmentId = assignRows[0].AssignmentId;
-    const newStatus = input.action === "APPROVE" ? "APPROVED" : "REJECTED";
-    const now = new Date();
     const shortcomment = input.comment?.trim().substring(0, 100) || null;
 
-    const conn = await pool.getConnection();
+    // Call stored procedure: database handles ACID transaction, pessimistic row-locking,
+    // active role-assignment verification, and triggers workflow cascades.
+    const [resultSets] = await pool.query<RowDataPacket[][]>(
+      `CALL sp_process_approval_action(?, ?, ?, ?, ?, @out_code, @out_msg);
+       SELECT @out_code AS statusCode, @out_msg AS statusMessage;`,
+      [input.hid, input.reqid, currentUser.id, input.action, shortcomment]
+    );
 
-    try {
-      await conn.beginTransaction();
+    const outRow = (resultSets[1] as RowDataPacket[])?.[0];
+    const statusCode = outRow?.statusCode;
+    const statusMessage = outRow?.statusMessage;
 
-      // Update the step with ActionByUserId and ActionAsAssignmentId
-      await conn.execute(
-        `UPDATE approval_steps
-         SET approvalstatus = ?, actiontime = ?, shortcomment = ?, ActionByUserId = ?, ActionAsAssignmentId = ?
-         WHERE hid = ? AND reqid = ?`,
-        [newStatus, now, shortcomment, currentUser.id, activeAssignmentId, input.hid, input.reqid]
-      );
-
-      if (input.action === "REJECT") {
-        // Reject the entire request
-        await conn.execute(
-          `UPDATE requests SET reqstatus = 'REJECTED' WHERE reqid = ?`,
-          [input.reqid]
-        );
-
-        await conn.commit();
-
-        revalidatePath("/dashboard/approvals");
-        revalidatePath("/dashboard/requests");
-        return { success: true, message: "Request rejected successfully." };
-      }
-
-      // Action is APPROVE — check if all steps for this request are now approved
-      const [allSteps] = await conn.execute<RowDataPacket[]>(
-        `SELECT approvalstatus FROM approval_steps WHERE reqid = ?`,
-        [input.reqid]
-      );
-
-      const allApproved = allSteps.every((s) => s.approvalstatus === "APPROVED");
-
-      if (allApproved) {
-        // Final approval — mark request APPROVED and create allocation
-        await conn.execute(
-          `UPDATE requests SET reqstatus = 'APPROVED' WHERE reqid = ?`,
-          [input.reqid]
-        );
-
-        // Create allocation (or update if already exists)
-        await conn.execute(
-          `INSERT INTO allocations (reqid, allocationstatus) VALUES (?, 'SCHEDULED')
-           ON DUPLICATE KEY UPDATE allocationstatus = 'SCHEDULED'`,
-          [input.reqid]
-        );
-      }
-
-      await conn.commit();
-    } catch (txErr) {
-      await conn.rollback();
-      throw txErr;
-    } finally {
-      conn.release();
+    if (statusCode !== "SUCCESS") {
+      return {
+        success: false,
+        error: statusMessage || "Failed to process approval action.",
+      };
     }
 
     revalidatePath("/dashboard/approvals");
     revalidatePath("/dashboard/requests");
     revalidatePath("/dashboard/allocations");
+
     return {
       success: true,
-      message: input.action === "APPROVE" ? "Request approved successfully." : "Request rejected.",
+      message: statusMessage || (input.action === "APPROVE" ? "Step approved successfully." : "Request rejected."),
     };
   } catch (error: unknown) {
-    console.error("Failed to act on approval:", error);
-    const message = error instanceof Error ? error.message : "Failed to process approval action.";
+    console.error("Database error during approval action:", error);
+    const message = error instanceof Error ? error.message : "Database operation failed.";
     return { success: false, error: message };
   }
 }

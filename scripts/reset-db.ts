@@ -6,6 +6,48 @@ import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
 
+function splitSqlStatements(sqlText: string): string[] {
+  const lines = sqlText.split(/\r?\n/);
+  const statements: string[] = [];
+  let currentDelimiter = ";";
+  let currentStatement = "";
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.toUpperCase().startsWith("DELIMITER")) {
+      const parts = trimmed.split(/\s+/);
+      if (parts[1]) {
+        currentDelimiter = parts[1];
+      }
+      continue;
+    }
+
+    if (currentDelimiter !== ";" && line.includes(currentDelimiter)) {
+      const parts = line.split(currentDelimiter);
+      currentStatement += parts[0];
+      if (currentStatement.trim()) {
+        statements.push(currentStatement.trim());
+      }
+      currentStatement = parts.slice(1).join(currentDelimiter);
+    } else if (currentDelimiter === ";" && line.includes(";")) {
+      const parts = line.split(";");
+      currentStatement += parts[0];
+      if (currentStatement.trim()) {
+        statements.push(currentStatement.trim());
+      }
+      currentStatement = parts.slice(1).join(";");
+    } else {
+      currentStatement += line + "\n";
+    }
+  }
+
+  if (currentStatement.trim()) {
+    statements.push(currentStatement.trim());
+  }
+
+  return statements.filter((s) => s.length > 0);
+}
+
 async function main() {
   const host = process.env.DB_HOST || "localhost";
   const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
@@ -59,6 +101,27 @@ async function main() {
     const schemaSql = fs.readFileSync(path.join(process.cwd(), "schema.sql"), "utf-8");
     await connection.query(schemaSql);
     console.log("🎉 Database schema applied successfully!");
+
+    // ── Apply Stored Procedures & Triggers ─────────────────────────────────
+    const triggersPath = path.join(process.cwd(), "sql", "triggers_workflow.sql");
+    if (fs.existsSync(triggersPath)) {
+      console.log("⚡ Applying workflow triggers from sql/triggers_workflow.sql...");
+      const triggersSql = fs.readFileSync(triggersPath, "utf-8");
+      for (const stmt of splitSqlStatements(triggersSql)) {
+        await connection.query(stmt);
+      }
+      console.log("✅ Workflow triggers applied successfully!");
+    }
+
+    const proceduresPath = path.join(process.cwd(), "sql", "procedures_approval.sql");
+    if (fs.existsSync(proceduresPath)) {
+      console.log("📦 Applying approval procedures from sql/procedures_approval.sql...");
+      const proceduresSql = fs.readFileSync(proceduresPath, "utf-8");
+      for (const stmt of splitSqlStatements(proceduresSql)) {
+        await connection.query(stmt);
+      }
+      console.log("✅ Approval procedures applied successfully!");
+    }
 
     console.log("🌱 Starting seed data insertion...");
     const defaultHashedPassword = await bcrypt.hash("password123", 10);
