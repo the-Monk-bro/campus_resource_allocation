@@ -44,9 +44,6 @@ interface StepDetailQueryResult extends RowDataPacket {
   scopeId: string;
   scopeName: string;
   scopeType: string;
-  approverid: string;
-  approverName: string | null;
-  approverEmail: string | null;
   actionByUserId: string | null;
   actionByName: string | null;
   approvalstatus: "PENDING" | "APPROVED" | "REJECTED";
@@ -71,9 +68,6 @@ export async function getApprovalStepsForRequestAction(
         s.ScopeId AS scopeId,
         s.ScopeName AS scopeName,
         s.ScopeType AS scopeType,
-        ast.approverid,
-        u.name AS approverName,
-        u.email AS approverEmail,
         ast.ActionByUserId AS actionByUserId,
         uAction.name AS actionByName,
         ast.approvalstatus,
@@ -84,7 +78,6 @@ export async function getApprovalStepsForRequestAction(
        INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
        INNER JOIN roles r ON ah.RoleId = r.RoleId
        INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
-       INNER JOIN users u ON ast.approverid = u.id
        LEFT JOIN users uAction ON ast.ActionByUserId = uAction.id
        WHERE ast.reqid = ?
        ORDER BY ah.hlevel ASC`,
@@ -101,9 +94,6 @@ export async function getApprovalStepsForRequestAction(
         scopeId: r.scopeId,
         scopeName: r.scopeName,
         scopeType: r.scopeType,
-        approverid: r.approverid,
-        approverName: r.approverName,
-        approverEmail: r.approverEmail,
         actionByUserId: r.actionByUserId,
         actionByName: r.actionByName,
         approvalstatus: r.approvalstatus,
@@ -162,9 +152,9 @@ export async function getMyPendingApprovalsAction(): Promise<
       return { success: false, error: "User not found." };
     }
 
-    // Get all PENDING steps assigned to this user where the user still has an active matching assignment
+    // Get all PENDING steps where the current user holds an active matching role assignment for the step's (RoleId, ScopeId)
     const [pendingSteps] = await pool.execute<PendingStepQueryResult[]>(
-      `SELECT
+      `SELECT DISTINCT
         ast.hid,
         ast.reqid,
         ah.hlevel,
@@ -178,13 +168,12 @@ export async function getMyPendingApprovalsAction(): Promise<
        INNER JOIN roles r ON ah.RoleId = r.RoleId
        INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
        INNER JOIN role_assignments ra ON ra.RoleId = ah.RoleId AND ra.ScopeId = ah.ScopeId
-       WHERE ast.approverid = ?
-         AND ast.approvalstatus = 'PENDING'
+       WHERE ast.approvalstatus = 'PENDING'
          AND ra.UserId = ?
          AND ra.ValidFrom <= NOW()
          AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
        ORDER BY ast.issuetime ASC`,
-      [currentUser.id, currentUser.id]
+      [currentUser.id]
     );
 
     // For each pending step, check if previous levels are all approved
@@ -357,17 +346,27 @@ export async function actOnApprovalAction(input: {
 
     const shortcomment = input.comment?.trim().substring(0, 100) || null;
 
-    // Call stored procedure: database handles ACID transaction, pessimistic row-locking,
-    // active role-assignment verification, and triggers workflow cascades.
-    const [resultSets] = await pool.query<RowDataPacket[][]>(
-      `CALL sp_process_approval_action(?, ?, ?, ?, ?, @out_code, @out_msg);
-       SELECT @out_code AS statusCode, @out_msg AS statusMessage;`,
-      [input.hid, input.reqid, currentUser.id, input.action, shortcomment]
-    );
+    // Use a dedicated connection so session variables (@out_code, @out_msg) persist across CALL and SELECT
+    // without requiring multipleStatements: true on the pool.
+    const conn = await pool.getConnection();
+    let statusCode: string | undefined;
+    let statusMessage: string | undefined;
 
-    const outRow = (resultSets[1] as RowDataPacket[])?.[0];
-    const statusCode = outRow?.statusCode;
-    const statusMessage = outRow?.statusMessage;
+    try {
+      await conn.query(
+        `CALL sp_process_approval_action(?, ?, ?, ?, ?, @out_code, @out_msg)`,
+        [input.hid, input.reqid, currentUser.id, input.action, shortcomment]
+      );
+
+      const [outRows] = await conn.query<RowDataPacket[]>(
+        `SELECT @out_code AS statusCode, @out_msg AS statusMessage`
+      );
+
+      statusCode = outRows[0]?.statusCode;
+      statusMessage = outRows[0]?.statusMessage;
+    } finally {
+      conn.release();
+    }
 
     if (statusCode !== "SUCCESS") {
       return {

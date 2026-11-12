@@ -200,12 +200,10 @@ export async function createRequestAction(input: CreateRequestInput) {
             );
           }
 
-          const assignedApproverId = approverRows[0].UserId;
-
           await conn.execute(
-            `INSERT INTO approval_steps (hid, reqid, approverid, approvalstatus, issuetime)
-             VALUES (?, ?, ?, 'PENDING', ?)`,
-            [h.hid, newRequestId, assignedApproverId, now]
+            `INSERT INTO approval_steps (hid, reqid, approvalstatus, issuetime)
+             VALUES (?, ?, 'PENDING', ?)`,
+            [h.hid, newRequestId, now]
           );
         }
       }

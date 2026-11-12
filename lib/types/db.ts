@@ -106,7 +106,6 @@ export interface ApprovalHierarchyRow extends RowDataPacket {
 export interface ApprovalStepRow extends RowDataPacket {
   hid: string;
   reqid: number;
-  approverid: string;
   ActionByUserId: string | null;
   ActionAsAssignmentId: number | null;
   issuetime: Date;

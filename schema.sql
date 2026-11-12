@@ -191,7 +191,6 @@ CREATE TABLE IF NOT EXISTS `approval_hierarchies` (
 CREATE TABLE IF NOT EXISTS `approval_steps` (
   `hid` VARCHAR(20) NOT NULL,
   `reqid` INT NOT NULL,
-  `approverid` VARCHAR(255) NOT NULL,
   `ActionByUserId` VARCHAR(255) NULL DEFAULT NULL,
   `ActionAsAssignmentId` INT NULL DEFAULT NULL,
   `issuetime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -200,7 +199,6 @@ CREATE TABLE IF NOT EXISTS `approval_steps` (
   `approvalstatus` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
   PRIMARY KEY (`hid`, `reqid`),
   KEY `approval_steps_reqid_idx` (`reqid`),
-  KEY `approval_steps_approverid_idx` (`approverid`),
   KEY `approval_steps_actionby_idx` (`ActionByUserId`),
   KEY `approval_steps_actionas_idx` (`ActionAsAssignmentId`),
   CONSTRAINT `fk_steps_hierarchy`
@@ -208,9 +206,6 @@ CREATE TABLE IF NOT EXISTS `approval_steps` (
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_steps_request`
     FOREIGN KEY (`reqid`) REFERENCES `requests` (`reqid`)
-    ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `fk_steps_approver`
-    FOREIGN KEY (`approverid`) REFERENCES `users` (`id`)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_steps_actionby`
     FOREIGN KEY (`ActionByUserId`) REFERENCES `users` (`id`)

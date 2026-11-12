@@ -104,13 +104,13 @@ function ApprovalStepsDropdown({ steps }: { steps: ApprovalStepDetail[] }) {
                         </span>
                       )}
                     </p>
-                    <p className="text-[11px] text-slate-400">
-                      Approver: {step.approverName || "Pending Assignment"}
-                      {step.approverEmail ? ` (${step.approverEmail})` : ""}
-                    </p>
-                    {step.actionByName && step.actionByName !== step.approverName && (
-                      <p className="text-[10px] text-slate-500">
-                        Acted by: {step.actionByName}
+                    {step.actionByName ? (
+                      <p className="text-[11px] text-slate-400">
+                        {step.approvalstatus === "APPROVED" ? "Approved by" : "Rejected by"}: <strong className="text-slate-300">{step.actionByName}</strong>
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-500 italic">
+                        Awaiting review from {step.roleName ? `${step.roleName}` : "approver"}
                       </p>
                     )}
                   </div>

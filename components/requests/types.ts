@@ -24,9 +24,6 @@ export interface ApprovalStepDetail {
   scopeId?: string;
   scopeName?: string;
   scopeType?: string;
-  approverid: string;
-  approverName: string | null;
-  approverEmail: string | null;
   actionByUserId?: string | null;
   actionByName?: string | null;
   approvalstatus: "PENDING" | "APPROVED" | "REJECTED";
