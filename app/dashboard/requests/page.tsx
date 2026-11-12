@@ -51,7 +51,13 @@ interface UserAssignmentQueryResult extends RowDataPacket {
   scopeType: string;
 }
 
-export default async function RequestsPage() {
+export default async function RequestsPage(props: {
+  searchParams?: Promise<{ tab?: string; resourceId?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const defaultTab = searchParams?.tab === "my" ? "my" : "make";
+  const defaultResourceId = searchParams?.resourceId;
+
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
@@ -219,6 +225,8 @@ export default async function RequestsPage() {
       activeAssignments={serializedActiveAssignments}
       currentUserId={currentUser.id}
       currentUserName={currentUser.name || session.user.name || "User"}
+      defaultTab={defaultTab}
+      defaultResourceId={defaultResourceId}
     />
   );
 }

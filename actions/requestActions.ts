@@ -240,8 +240,6 @@ interface ApproverHierarchyQueryResult extends RowDataPacket {
   scopeId: string;
   scopeName: string;
   scopeType: string;
-  currentApproverName: string | null;
-  currentApproverEmail: string | null;
 }
 
 export async function getApprovalHierarchyAction(
@@ -253,24 +251,17 @@ export async function getApprovalHierarchyAction(
     }
 
     const [rows] = await pool.execute<ApproverHierarchyQueryResult[]>(
-      `SELECT
+      `SELECT DISTINCT
         ah.hid,
         ah.hlevel,
         r.RoleId AS roleId,
         r.RoleName AS roleName,
         s.ScopeId AS scopeId,
         s.ScopeName AS scopeName,
-        s.ScopeType AS scopeType,
-        u.name AS currentApproverName,
-        u.email AS currentApproverEmail
+        s.ScopeType AS scopeType
        FROM approval_hierarchies ah
        INNER JOIN roles r ON ah.RoleId = r.RoleId
        INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
-       LEFT JOIN role_assignments ra ON ra.RoleId = ah.RoleId
-         AND ra.ScopeId = ah.ScopeId
-         AND ra.ValidFrom <= NOW()
-         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
-       LEFT JOIN users u ON ra.UserId = u.id
        WHERE ah.resid = ?
        ORDER BY ah.hlevel ASC`,
       [resid.trim()]
@@ -286,8 +277,8 @@ export async function getApprovalHierarchyAction(
         scopeId: r.scopeId,
         scopeName: r.scopeName,
         scopeType: r.scopeType,
-        currentApproverName: r.currentApproverName,
-        currentApproverEmail: r.currentApproverEmail,
+        currentApproverName: null,
+        currentApproverEmail: null,
       })),
     };
   } catch (error: unknown) {

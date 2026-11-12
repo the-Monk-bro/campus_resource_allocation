@@ -103,14 +103,18 @@ async function main() {
     console.log("🎉 Database schema applied successfully!");
 
     // ── Apply Stored Procedures & Triggers ─────────────────────────────────
-    const triggersPath = path.join(process.cwd(), "sql", "triggers_workflow.sql");
-    if (fs.existsSync(triggersPath)) {
-      console.log("⚡ Applying workflow triggers from sql/triggers_workflow.sql...");
-      const triggersSql = fs.readFileSync(triggersPath, "utf-8");
-      for (const stmt of splitSqlStatements(triggersSql)) {
-        await connection.query(stmt);
+    const triggerFiles = ["triggers_approval.sql", "triggers_workflow.sql"];
+    for (const file of triggerFiles) {
+      const triggersPath = path.join(process.cwd(), "sql", file);
+      if (fs.existsSync(triggersPath)) {
+        console.log(`⚡ Applying workflow triggers from sql/${file}...`);
+        const triggersSql = fs.readFileSync(triggersPath, "utf-8");
+        for (const stmt of splitSqlStatements(triggersSql)) {
+          await connection.query(stmt);
+        }
+        console.log(`✅ Workflow triggers from ${file} applied successfully!`);
+        break;
       }
-      console.log("✅ Workflow triggers applied successfully!");
     }
 
     const proceduresPath = path.join(process.cwd(), "sql", "procedures_approval.sql");

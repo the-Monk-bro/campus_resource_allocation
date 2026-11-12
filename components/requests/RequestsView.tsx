@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MakeRequestSection from "./MakeRequestSection";
 import MyRequestsSection from "./MyRequestsSection";
 import { ResourceItem, RequestRecord, UserActiveRoleAssignment } from "./types";
@@ -13,6 +13,8 @@ interface RequestsViewProps {
   activeAssignments?: UserActiveRoleAssignment[];
   currentUserId: string;
   currentUserName: string;
+  defaultTab?: "make" | "my";
+  defaultResourceId?: string;
 }
 
 type TabType = "make" | "my";
@@ -23,8 +25,16 @@ export default function RequestsView({
   activeAssignments = [],
   currentUserId,
   currentUserName,
+  defaultTab = "make",
+  defaultResourceId,
 }: RequestsViewProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("make");
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -104,6 +114,7 @@ export default function RequestsView({
           resources={resources}
           activeAssignments={activeAssignments}
           onSwitchToMyRequests={() => setActiveTab("my")}
+          defaultResourceId={defaultResourceId}
         />
       ) : (
         <MyRequestsSection

@@ -24,5 +24,5 @@ export async function updateProfile(formData: FormData) {
     [phno, session.user.email]
   );
 
-  redirect("/dashboard/profile");
+  redirect("/dashboard");
 }

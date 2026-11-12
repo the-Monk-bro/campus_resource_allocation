@@ -9,17 +9,23 @@ interface MakeRequestSectionProps {
   resources: ResourceItem[];
   activeAssignments?: UserActiveRoleAssignment[];
   onSwitchToMyRequests?: () => void;
+  defaultResourceId?: string;
 }
 
 export default function MakeRequestSection({
   resources,
   activeAssignments = [],
   onSwitchToMyRequests,
+  defaultResourceId,
 }: MakeRequestSectionProps) {
   const router = useRouter();
 
   // Form State
-  const [selectedResId, setSelectedResId] = useState<string>(resources[0]?.id || "");
+  const initialResId =
+    defaultResourceId && resources.some((r) => r.id === defaultResourceId)
+      ? defaultResourceId
+      : resources[0]?.id || "";
+  const [selectedResId, setSelectedResId] = useState<string>(initialResId);
   const [customResId, setCustomResId] = useState<string>("");
   const [isCustomResource, setIsCustomResource] = useState<boolean>(false);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | "">(
@@ -46,6 +52,14 @@ export default function MakeRequestSection({
       }
     }
   }, [activeAssignments, selectedAssignmentId]);
+
+  // Sync selected resource if defaultResourceId is provided via URL
+  useEffect(() => {
+    if (defaultResourceId && resources.some((r) => r.id === defaultResourceId)) {
+      setSelectedResId(defaultResourceId);
+      setIsCustomResource(false);
+    }
+  }, [defaultResourceId, resources]);
 
   // Validation
   const effectiveResId = isCustomResource ? customResId.trim() : selectedResId;
@@ -472,7 +486,7 @@ export default function MakeRequestSection({
               {/* Approval Chain */}
               <div className="pt-3 border-t border-slate-800">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2.5">
-                  Approval Chain
+                  Approval Hierarchy
                 </p>
                 {isLoadingHierarchy ? (
                   <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -480,7 +494,7 @@ export default function MakeRequestSection({
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>Loading approvers...</span>
+                    <span>Loading approval hierarchy...</span>
                   </div>
                 ) : approvers.length === 0 ? (
                   <p className="text-[11px] text-slate-500 italic">No approval hierarchy configured for this resource.</p>
@@ -492,19 +506,13 @@ export default function MakeRequestSection({
                         <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-bold flex items-center justify-center mt-0.5">
                           {approver.hlevel}
                         </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-semibold text-slate-200 truncate">
-                            {approver.roleName} &bull; {approver.scopeName}
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <p className="text-xs font-semibold text-slate-200">
+                            {approver.roleName}
                           </p>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {approver.currentApproverName ? (
-                              <span>
-                                {approver.currentApproverName}
-                                {approver.currentApproverEmail ? ` (${approver.currentApproverEmail})` : ""}
-                              </span>
-                            ) : (
-                              <span className="text-amber-400/80 italic">No active approver currently assigned</span>
-                            )}
+                          <p className="text-[11px] text-slate-400">
+                            <span className="text-slate-500">Scope: </span>
+                            <span className="text-indigo-300 font-medium">{approver.scopeName}</span>
                           </p>
                         </div>
                         {/* Connector arrow (not on last item) */}
