@@ -87,7 +87,7 @@ export default async function AdminRequestsPage() {
     FROM approval_steps ast
     INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
     INNER JOIN roles r ON ah.RoleId = r.RoleId
-    INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
+    LEFT JOIN scopes s ON ah.ScopeId = s.ScopeId
     LEFT JOIN users uAction ON ast.ActionByUserId = uAction.id
     ORDER BY ast.reqid DESC, ah.hlevel ASC
   `);
@@ -102,7 +102,7 @@ export default async function AdminRequestsPage() {
       roleId: s.roleId,
       roleName: s.roleName,
       scopeId: s.scopeId,
-      scopeName: s.scopeName,
+      scopeName: s.scopeName || "Any Scope",
       actionByUserId: s.actionByUserId,
       actionByName: s.actionByName,
       approvalstatus: s.approvalstatus,

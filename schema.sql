@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `approval_hierarchies` (
   `hlevel` SMALLINT NOT NULL DEFAULT 1,
   `resid` VARCHAR(100) NOT NULL,
   `RoleId` VARCHAR(100) NOT NULL,
-  `ScopeId` VARCHAR(100) NOT NULL,
+  `ScopeId` VARCHAR(100) NULL DEFAULT NULL,
   PRIMARY KEY (`hid`),
   UNIQUE KEY `unique_res_level` (`resid`, `hlevel`),
   KEY `approval_hierarchies_role_idx` (`RoleId`),

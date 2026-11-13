@@ -200,7 +200,7 @@ export default async function AdminOverviewPage() {
           Administrative Modules
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Link
             href="/admin/allocations"
             className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/60 transition-all group space-y-2"
@@ -272,7 +272,26 @@ export default async function AdminOverviewPage() {
                 Manage Resources
               </h3>
               <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
-                Create new halls/labs, update specs, or delete facilities
+                Create new halls/labs, update pipelines, or delete facilities
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/roles-scopes"
+            className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-pink-500/50 hover:bg-slate-800/60 transition-all group space-y-2"
+          >
+            <div className="w-8 h-8 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white group-hover:text-pink-300 transition-colors">
+                Roles & Scopes
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                Define institutional roles, departments, clubs, and permissions
               </p>
             </div>
           </Link>

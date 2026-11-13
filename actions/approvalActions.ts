@@ -77,7 +77,7 @@ export async function getApprovalStepsForRequestAction(
        FROM approval_steps ast
        INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
        INNER JOIN roles r ON ah.RoleId = r.RoleId
-       INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
+       LEFT JOIN scopes s ON ah.ScopeId = s.ScopeId
        LEFT JOIN users uAction ON ast.ActionByUserId = uAction.id
        WHERE ast.reqid = ?
        ORDER BY ah.hlevel ASC`,
@@ -92,7 +92,7 @@ export async function getApprovalStepsForRequestAction(
         roleId: r.roleId,
         roleName: r.roleName,
         scopeId: r.scopeId,
-        scopeName: r.scopeName,
+        scopeName: r.scopeName || "Any Scope",
         scopeType: r.scopeType,
         actionByUserId: r.actionByUserId,
         actionByName: r.actionByName,
@@ -159,15 +159,15 @@ export async function getMyPendingApprovalsAction(): Promise<
         ast.reqid,
         ah.hlevel,
         r.RoleName AS roleName,
-        s.ScopeName AS scopeName,
-        s.ScopeType AS scopeType,
+        COALESCE(s.ScopeName, 'Any Scope') AS scopeName,
+        COALESCE(s.ScopeType, '') AS scopeType,
         ah.resid,
         ast.issuetime
        FROM approval_steps ast
        INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
        INNER JOIN roles r ON ah.RoleId = r.RoleId
-       INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
-       INNER JOIN role_assignments ra ON ra.RoleId = ah.RoleId AND ra.ScopeId = ah.ScopeId
+       LEFT JOIN scopes s ON ah.ScopeId = s.ScopeId
+       INNER JOIN role_assignments ra ON ra.RoleId = ah.RoleId AND (ah.ScopeId IS NULL OR ra.ScopeId = ah.ScopeId)
        WHERE ast.approvalstatus = 'PENDING'
          AND ra.UserId = ?
          AND ra.ValidFrom <= NOW()
