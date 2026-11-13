@@ -203,6 +203,13 @@ async function main() {
         password: defaultHashedPassword,
         phno: "9890123456",
       },
+      {
+        id: "usr-cras-admin",
+        name: "CRAS Administrator",
+        email: "admin.cras@campus.edu",
+        password: defaultHashedPassword,
+        phno: "9999888877",
+      },
     ];
 
     for (const u of sampleUsers) {
@@ -226,6 +233,7 @@ async function main() {
       { RoleId: "ROLE-PRES",        RoleName: "Gymkhana President" },
       { RoleId: "ROLE-STAFF",       RoleName: "Staff Member" },
       { RoleId: "ROLE-SENATOR",     RoleName: "Student Senator" },
+      { RoleId: "ROLE-ADMIN",       RoleName: "Admin" },
     ];
 
     for (const r of sampleRoles) {
@@ -252,6 +260,7 @@ async function main() {
       { ScopeId: "SCOPE-CODING-CLUB",  ScopeName: "Coding Club",                      ScopeType: "CLUB" },
       { ScopeId: "SCOPE-ROBOTICS-CLUB",ScopeName: "Robotics Club",                    ScopeType: "CLUB" },
       { ScopeId: "SCOPE-INSTITUTE",    ScopeName: "Institute Administration",         ScopeType: "INSTITUTE" },
+      { ScopeId: "SCOPE-CRAS",         ScopeName: "CRAS",                             ScopeType: "INSTITUTE" },
     ];
 
     for (const s of sampleScopes) {
@@ -281,6 +290,7 @@ async function main() {
       { AssignmentId: 14, UserId: "usr-amit-01",    RoleId: "ROLE-HOD",         ScopeId: "SCOPE-PHY",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       { AssignmentId: 15, UserId: "usr-student-01", RoleId: "ROLE-TA",          ScopeId: "SCOPE-MA101",        ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
       { AssignmentId: 16, UserId: "usr-coord-01",   RoleId: "ROLE-COORD",       ScopeId: "SCOPE-ROBOTICS-CLUB",ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
+      { AssignmentId: 17, UserId: "usr-cras-admin", RoleId: "ROLE-ADMIN",       ScopeId: "SCOPE-CRAS",         ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
     ];
 
     for (const ra of sampleAssignments) {

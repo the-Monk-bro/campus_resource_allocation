@@ -1,7 +1,12 @@
 import Link from "next/link";
 import SignOutButton from "@/components/signOutButton";
+import { checkIsAdmin } from "@/lib/admin";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic';
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const { isAdmin } = await checkIsAdmin();
+
     return (
         <div className="min-h-screen flex bg-slate-950 text-slate-100">
             {/* Left Sidebar */}
@@ -77,6 +82,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </svg>
                         <span>Allocations</span>
                     </Link>
+
+                    {/* Conditional Admin Portal Link for Authorized Admin (CRAS) */}
+                    {isAdmin && (
+                        <div className="pt-3 mt-3 border-t border-slate-800/80">
+                            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-purple-400 uppercase">
+                                Institutional Admin
+                            </div>
+                            <Link
+                                href="/admin"
+                                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-purple-200 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 transition-all group shadow-sm"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <svg className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    <span>Admin Portal</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/40">
+                                    CRAS
+                                </span>
+                            </Link>
+                        </div>
+                    )}
                 </nav>
 
                 {/* Sidebar Footer with Sign Out */}
