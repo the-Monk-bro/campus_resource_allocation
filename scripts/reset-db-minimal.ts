@@ -127,6 +127,23 @@ async function main() {
       console.log("✅ Approval procedures applied successfully!");
     }
 
+    // Apply integrity rules: overlap trigger, stored functions, cleanup procedure and event
+    const integrityPath = path.join(process.cwd(), "sql", "integrity.sql");
+    if (fs.existsSync(integrityPath)) {
+      console.log("Applying integrity rules from sql/integrity.sql...");
+      const integritySql = fs.readFileSync(integrityPath, "utf-8");
+      for (const stmt of splitSqlStatements(integritySql)) {
+        await connection.query(stmt);
+      }
+      console.log("Integrity trigger, functions, procedure and event applied successfully!");
+
+      try {
+        await connection.query("SET GLOBAL event_scheduler = ON");
+      } catch {
+        console.warn("Could not turn on the event scheduler. Run this yourself: SET GLOBAL event_scheduler = ON;");
+      }
+    }
+
     console.log("🌱 Starting minimal seed...");
     const defaultHashedPassword = await bcrypt.hash("password123", 10);
 
@@ -216,16 +233,16 @@ async function main() {
     // ── 2. Roles ────────────────────────────────────────────────────────────
     console.log("🏷️  Seeding roles...");
     const sampleRoles = [
-      { RoleId: "ROLE-HOD",         RoleName: "Head of Department" },
-      { RoleId: "ROLE-PROF",        RoleName: "Professor" },
+      { RoleId: "ROLE-HOD", RoleName: "Head of Department" },
+      { RoleId: "ROLE-PROF", RoleName: "Professor" },
       { RoleId: "ROLE-FACULTY-ADV", RoleName: "Faculty Advisor" },
-      { RoleId: "ROLE-STUDENT",     RoleName: "Student" },
-      { RoleId: "ROLE-TA",          RoleName: "Teaching Assistant" },
-      { RoleId: "ROLE-COORD",       RoleName: "Club Coordinator" },
-      { RoleId: "ROLE-GENSEC",      RoleName: "General Secretary" },
-      { RoleId: "ROLE-PRES",        RoleName: "Gymkhana President" },
-      { RoleId: "ROLE-STAFF",       RoleName: "Staff Member" },
-      { RoleId: "ROLE-SENATOR",     RoleName: "Student Senator" },
+      { RoleId: "ROLE-STUDENT", RoleName: "Student" },
+      { RoleId: "ROLE-TA", RoleName: "Teaching Assistant" },
+      { RoleId: "ROLE-COORD", RoleName: "Club Coordinator" },
+      { RoleId: "ROLE-GENSEC", RoleName: "General Secretary" },
+      { RoleId: "ROLE-PRES", RoleName: "Gymkhana President" },
+      { RoleId: "ROLE-STAFF", RoleName: "Staff Member" },
+      { RoleId: "ROLE-SENATOR", RoleName: "Student Senator" },
     ];
 
     for (const r of sampleRoles) {
@@ -239,19 +256,19 @@ async function main() {
     // ── 3. Scopes ───────────────────────────────────────────────────────────
     console.log("🌐 Seeding scopes...");
     const sampleScopes = [
-      { ScopeId: "SCOPE-CSE",          ScopeName: "Computer Science and Engineering", ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-EE",           ScopeName: "Electrical Engineering",           ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-ME",           ScopeName: "Mechanical Engineering",           ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-MEMS",         ScopeName: "Materials Science & Engineering",  ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-MATH",         ScopeName: "Mathematics",                      ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-PHY",          ScopeName: "Physics",                          ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-CHEM",         ScopeName: "Chemistry",                        ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-SOI",          ScopeName: "School of Innovation",             ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-MA101",        ScopeName: "MA101 - Calculus",                 ScopeType: "COURSE" },
-      { ScopeId: "SCOPE-CS257",        ScopeName: "CS257 - Database Systems",         ScopeType: "COURSE" },
-      { ScopeId: "SCOPE-CODING-CLUB",  ScopeName: "Coding Club",                      ScopeType: "CLUB" },
-      { ScopeId: "SCOPE-ROBOTICS-CLUB",ScopeName: "Robotics Club",                    ScopeType: "CLUB" },
-      { ScopeId: "SCOPE-INSTITUTE",    ScopeName: "Institute Administration",         ScopeType: "INSTITUTE" },
+      { ScopeId: "SCOPE-CSE", ScopeName: "Computer Science and Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-EE", ScopeName: "Electrical Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-ME", ScopeName: "Mechanical Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-MEMS", ScopeName: "Materials Science & Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-MATH", ScopeName: "Mathematics", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-PHY", ScopeName: "Physics", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-CHEM", ScopeName: "Chemistry", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-SOI", ScopeName: "School of Innovation", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-MA101", ScopeName: "MA101 - Calculus", ScopeType: "COURSE" },
+      { ScopeId: "SCOPE-CS257", ScopeName: "CS257 - Database Systems", ScopeType: "COURSE" },
+      { ScopeId: "SCOPE-CODING-CLUB", ScopeName: "Coding Club", ScopeType: "CLUB" },
+      { ScopeId: "SCOPE-ROBOTICS-CLUB", ScopeName: "Robotics Club", ScopeType: "CLUB" },
+      { ScopeId: "SCOPE-INSTITUTE", ScopeName: "Institute Administration", ScopeType: "INSTITUTE" },
     ];
 
     for (const s of sampleScopes) {
@@ -265,22 +282,22 @@ async function main() {
     // ── 4. Role Assignments ─────────────────────────────────────────────────
     console.log("🔗 Seeding role assignments...");
     const sampleAssignments = [
-      { AssignmentId: 1,  UserId: "usr-admin-01",   RoleId: "ROLE-HOD",         ScopeId: "SCOPE-CSE",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 2,  UserId: "usr-faculty-01", RoleId: "ROLE-HOD",         ScopeId: "SCOPE-EE",           ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 3,  UserId: "usr-faculty-01", RoleId: "ROLE-FACULTY-ADV", ScopeId: "SCOPE-CODING-CLUB",  ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 4,  UserId: "usr-pres-01",    RoleId: "ROLE-PRES",        ScopeId: "SCOPE-INSTITUTE",    ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 5,  UserId: "usr-gensec-01",  RoleId: "ROLE-GENSEC",      ScopeId: "SCOPE-INSTITUTE",    ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 6,  UserId: "usr-staff-01",   RoleId: "ROLE-STAFF",       ScopeId: "SCOPE-SOI",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 7,  UserId: "usr-coord-01",   RoleId: "ROLE-COORD",       ScopeId: "SCOPE-CODING-CLUB",  ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 8,  UserId: "usr-coord-01",   RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-ME",           ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 9,  UserId: "usr-student-01", RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-CSE",          ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 10, UserId: "usr-student-01", RoleId: "ROLE-TA",          ScopeId: "SCOPE-CS257",        ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 11, UserId: "usr-priya-01",   RoleId: "ROLE-TA",          ScopeId: "SCOPE-CS257",        ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 12, UserId: "usr-priya-01",   RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-MATH",         ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 13, UserId: "usr-neha-01",    RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-CHEM",         ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 14, UserId: "usr-amit-01",    RoleId: "ROLE-HOD",         ScopeId: "SCOPE-PHY",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 15, UserId: "usr-student-01", RoleId: "ROLE-TA",          ScopeId: "SCOPE-MA101",        ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
-      { AssignmentId: 16, UserId: "usr-coord-01",   RoleId: "ROLE-COORD",       ScopeId: "SCOPE-ROBOTICS-CLUB",ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
+      { AssignmentId: 1, UserId: "usr-admin-01", RoleId: "ROLE-HOD", ScopeId: "SCOPE-CSE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 2, UserId: "usr-faculty-01", RoleId: "ROLE-HOD", ScopeId: "SCOPE-EE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 3, UserId: "usr-faculty-01", RoleId: "ROLE-FACULTY-ADV", ScopeId: "SCOPE-CODING-CLUB", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 4, UserId: "usr-pres-01", RoleId: "ROLE-PRES", ScopeId: "SCOPE-INSTITUTE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 5, UserId: "usr-gensec-01", RoleId: "ROLE-GENSEC", ScopeId: "SCOPE-INSTITUTE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 6, UserId: "usr-staff-01", RoleId: "ROLE-STAFF", ScopeId: "SCOPE-SOI", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 7, UserId: "usr-coord-01", RoleId: "ROLE-COORD", ScopeId: "SCOPE-CODING-CLUB", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 8, UserId: "usr-coord-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-ME", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 9, UserId: "usr-student-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-CSE", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 10, UserId: "usr-student-01", RoleId: "ROLE-TA", ScopeId: "SCOPE-CS257", ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 11, UserId: "usr-priya-01", RoleId: "ROLE-TA", ScopeId: "SCOPE-CS257", ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 12, UserId: "usr-priya-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-MATH", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 13, UserId: "usr-neha-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-CHEM", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 14, UserId: "usr-amit-01", RoleId: "ROLE-HOD", ScopeId: "SCOPE-PHY", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 15, UserId: "usr-student-01", RoleId: "ROLE-TA", ScopeId: "SCOPE-MA101", ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
+      { AssignmentId: 16, UserId: "usr-coord-01", RoleId: "ROLE-COORD", ScopeId: "SCOPE-ROBOTICS-CLUB", ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
     ];
 
     for (const ra of sampleAssignments) {
@@ -320,17 +337,17 @@ async function main() {
     // ── 6. Approval Hierarchies (RoleId, ScopeId) ───────────────────────────
     console.log("🏛️  Seeding approval hierarchies with Role & Scope...");
     const sampleHierarchies = [
-      { hid: "H-AUDI-L1",   hlevel: 1, resid: "AUDI-MAIN",    roleId: "ROLE-HOD",    scopeId: "SCOPE-CSE" },
-      { hid: "H-AUDI-L2",   hlevel: 2, resid: "AUDI-MAIN",    roleId: "ROLE-PRES",   scopeId: "SCOPE-INSTITUTE" },
-      { hid: "H-LH201-L1",  hlevel: 1, resid: "LH-201",       roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
-      { hid: "H-LH101-L1",  hlevel: 1, resid: "LH-101",       roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
-      { hid: "H-LH102-L1",  hlevel: 1, resid: "LH-102",       roleId: "ROLE-STAFF",  scopeId: "SCOPE-SOI" },
-      { hid: "H-LABCSE-L1", hlevel: 1, resid: "LAB-CSE-1",    roleId: "ROLE-HOD",    scopeId: "SCOPE-CSE" },
-      { hid: "H-AI-L1",     hlevel: 1, resid: "LAB-AI-GPU",   roleId: "ROLE-HOD",    scopeId: "SCOPE-CSE" },
-      { hid: "H-SPORT-L1",  hlevel: 1, resid: "SPORTS-ARENA", roleId: "ROLE-GENSEC", scopeId: "SCOPE-INSTITUTE" },
-      { hid: "H-SPORT-L2",  hlevel: 2, resid: "SPORTS-ARENA", roleId: "ROLE-PRES",   scopeId: "SCOPE-INSTITUTE" },
-      { hid: "H-SEMA-L1",   hlevel: 1, resid: "SEMINAR-A",    roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
-      { hid: "H-CR301-L1",  hlevel: 1, resid: "CR-301",       roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
+      { hid: "H-AUDI-L1", hlevel: 1, resid: "AUDI-MAIN", roleId: "ROLE-HOD", scopeId: "SCOPE-CSE" },
+      { hid: "H-AUDI-L2", hlevel: 2, resid: "AUDI-MAIN", roleId: "ROLE-PRES", scopeId: "SCOPE-INSTITUTE" },
+      { hid: "H-LH201-L1", hlevel: 1, resid: "LH-201", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
+      { hid: "H-LH101-L1", hlevel: 1, resid: "LH-101", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
+      { hid: "H-LH102-L1", hlevel: 1, resid: "LH-102", roleId: "ROLE-STAFF", scopeId: "SCOPE-SOI" },
+      { hid: "H-LABCSE-L1", hlevel: 1, resid: "LAB-CSE-1", roleId: "ROLE-HOD", scopeId: "SCOPE-CSE" },
+      { hid: "H-AI-L1", hlevel: 1, resid: "LAB-AI-GPU", roleId: "ROLE-HOD", scopeId: "SCOPE-CSE" },
+      { hid: "H-SPORT-L1", hlevel: 1, resid: "SPORTS-ARENA", roleId: "ROLE-GENSEC", scopeId: "SCOPE-INSTITUTE" },
+      { hid: "H-SPORT-L2", hlevel: 2, resid: "SPORTS-ARENA", roleId: "ROLE-PRES", scopeId: "SCOPE-INSTITUTE" },
+      { hid: "H-SEMA-L1", hlevel: 1, resid: "SEMINAR-A", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
+      { hid: "H-CR301-L1", hlevel: 1, resid: "CR-301", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
     ];
 
     for (const h of sampleHierarchies) {

@@ -7,6 +7,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { checkResourceAvailabilityAction } from "@/actions/allocationAction";
 
 export interface CreateRequestInput {
   resid: string;
@@ -146,6 +147,18 @@ export async function createRequestAction(input: CreateRequestInput) {
     const existingResource = resRows[0];
     if (!existingResource) {
       return { success: false, error: `Selected resource '${resid}' was not found in the database.` };
+    }
+
+    // Check the resource is free for this time slot (MySQL function fn_check_resource_availability)
+    const availability = await checkResourceAvailabilityAction(existingResource.id, startDate, endDate);
+    if (!availability.success) {
+      return { success: false, error: availability.error };
+    }
+    if (!availability.available) {
+      return {
+        success: false,
+        error: "This resource is already booked for the selected time. Please choose a different time slot.",
+      };
     }
 
     // Validate purpose length (max 100 chars per schema)

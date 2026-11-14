@@ -77,6 +77,23 @@ The repository includes automated TypeScript scripts to reset and seed the datab
   ```
 
 ---
+## 3b. Load Integrity Rules, Functions and Automatic Cleanup
+
+After importing schema.sql, also run sql/integrity.sql. It creates the
+overlap trigger, the two stored functions, the cleanup procedure and the event.
+
+Using the MySQL CLI (from the project root):
+```bash
+mysql -u root -p campus_resource_allocation < sql/integrity.sql
+```
+
+In MySQL Workbench, open sql/integrity.sql and run it the same way as schema.sql.
+
+Then turn on the MySQL event scheduler. It resets when MySQL restarts, so run this
+again after a restart:
+```sql
+SET GLOBAL event_scheduler = ON;
+```
 
 ## 4. Configure `.env.local`
 

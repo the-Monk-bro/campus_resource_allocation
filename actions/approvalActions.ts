@@ -344,6 +344,15 @@ export async function actOnApprovalAction(input: {
       return { success: false, error: "User not found." };
     }
 
+    // Extra safety check: does this user hold a currently valid role for this approval step?
+    const [authRows] = await pool.execute<RowDataPacket[]>(
+      `SELECT fn_is_user_authorized_for_step(?, ?) AS ok`,
+      [currentUser.id, input.hid]
+    );
+    if (Number(authRows[0]?.ok) !== 1) {
+      return { success: false, error: "You are not authorized to act on this approval step." };
+    }
+
     const shortcomment = input.comment?.trim().substring(0, 100) || null;
 
     // Use a dedicated connection so session variables (@out_code, @out_msg) persist across CALL and SELECT
