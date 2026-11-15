@@ -2,6 +2,25 @@
 
 import { useState, useMemo } from "react";
 import { ApprovalStepDetail } from "@/components/requests/types";
+import {
+  Search,
+  Filter,
+  ClipboardList,
+  Clock,
+  User,
+  Building2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  GitCommit,
+  Check,
+  X,
+  Inbox,
+  Sparkles,
+} from "lucide-react";
 
 export interface AdminRequestItem {
   reqid: number;
@@ -42,29 +61,29 @@ function getRequestStatusBadge(status: string) {
   switch (status) {
     case "APPROVED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           Approved
         </span>
       );
     case "REJECTED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           Rejected
         </span>
       );
     case "CANCELLED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
           <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
           Cancelled
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
           Pending
         </span>
       );
@@ -155,41 +174,53 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
     <div className="space-y-6">
       {/* ── Summary Counters ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">
-            Total Requests
-          </span>
-          <span className="text-2xl font-black text-white mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Total Requests
+            </span>
+            <ClipboardList className="w-4 h-4 text-slate-400" />
+          </div>
+          <span className="text-2xl font-black text-slate-900 mt-1 block">
             {initialRequests.length}
           </span>
           <span className="text-[11px] text-slate-500">All submissions recorded</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-amber-400 font-medium uppercase tracking-wider block">
-            Pending Review
-          </span>
-          <span className="text-2xl font-black text-amber-300 mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-amber-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
+              Pending Review
+            </span>
+            <AlertCircle className="w-4 h-4 text-amber-600" />
+          </div>
+          <span className="text-2xl font-black text-amber-700 mt-1 block">
             {initialRequests.filter((r) => r.reqstatus === "PENDING").length}
           </span>
-          <span className="text-[11px] text-slate-500">In approval pipeline</span>
+          <span className="text-[11px] text-slate-500">Awaiting approvers</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-emerald-400 font-medium uppercase tracking-wider block">
-            Approved
-          </span>
-          <span className="text-2xl font-black text-emerald-400 mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-emerald-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+              Approved
+            </span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="text-2xl font-black text-emerald-700 mt-1 block">
             {initialRequests.filter((r) => r.reqstatus === "APPROVED").length}
           </span>
           <span className="text-[11px] text-slate-500">Allocated & confirmed</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-rose-400 font-medium uppercase tracking-wider block">
-            Rejected / Cancelled
-          </span>
-          <span className="text-2xl font-black text-rose-300 mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-rose-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-700">
+              Rejected / Cancelled
+            </span>
+            <XCircle className="w-4 h-4 text-rose-600" />
+          </div>
+          <span className="text-2xl font-black text-rose-700 mt-1 block">
             {initialRequests.filter((r) => r.reqstatus === "REJECTED" || r.reqstatus === "CANCELLED").length}
           </span>
           <span className="text-[11px] text-slate-500">Declined or aborted</span>
@@ -197,31 +228,23 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
       </div>
 
       {/* ── Search & Filter Controls ─────────────────────────────────── */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+      <div className="saas-card p-4 sm:p-5 space-y-4">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search bar */}
           <div className="relative flex-1">
-            <svg
-              className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by requester name, email, facility name, or purpose..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 transition-colors"
+              className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 Clear
               </button>
@@ -230,11 +253,11 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-slate-400 font-medium">Sort by:</span>
+            <span className="text-xs text-slate-500 font-medium">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-600 transition-colors"
             >
               <option value="reqtime_desc">Submitted (Newest First)</option>
               <option value="reqtime_asc">Submitted (Oldest First)</option>
@@ -245,18 +268,21 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
         </div>
 
         {/* Filter Pills & Expand All */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-slate-400 font-medium mr-1">Status:</span>
+            <span className="text-xs text-slate-400 font-medium mr-1 flex items-center gap-1">
+              <Filter className="w-3 h-3 text-slate-400" />
+              Status:
+            </span>
             {(["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"] as const).map((st) => (
               <button
                 key={st}
                 type="button"
                 onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   statusFilter === st
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
                 }`}
               >
                 {st === "ALL" ? "All" : st}
@@ -268,14 +294,14 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
             <button
               type="button"
               onClick={expandAll}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-slate-100 text-[11px] font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60 transition-colors cursor-pointer"
             >
               Expand All Chains
             </button>
             <button
               type="button"
               onClick={collapseAll}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] font-semibold text-slate-400 hover:text-white transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-slate-100 text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-200 border border-slate-200/60 transition-colors cursor-pointer"
             >
               Collapse All
             </button>
@@ -285,8 +311,11 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
 
       {/* ── Requests Feed / Cards ────────────────────────────────────── */}
       {filteredRequests.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-          <p className="text-sm font-semibold text-slate-300">No matching requests found</p>
+        <div className="p-12 text-center saas-card space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <Inbox className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-semibold text-slate-800">No matching requests found</p>
           <p className="text-xs text-slate-500">Try adjusting your filters or search keywords.</p>
         </div>
       ) : (
@@ -297,26 +326,26 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
             return (
               <div
                 key={req.reqid}
-                className="p-5 sm:p-6 rounded-3xl bg-slate-900/85 border border-slate-800 hover:border-slate-700/80 transition-all space-y-4 shadow-xl"
+                className="p-5 sm:p-6 saas-card hover:border-slate-300 transition-all space-y-4 shadow-xs"
               >
                 {/* Header Row: Facility, Location, Status */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400 font-bold">
+                    <span className="font-mono text-xs px-2.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-bold">
                       REQ #{req.reqid}
                     </span>
-                    <span className="text-base font-extrabold text-white">
+                    <span className="text-sm sm:text-base font-bold text-slate-900">
                       {req.resourceName ?? req.resourceId}
                     </span>
                     {req.resourceLocation && (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-500">
                         • {req.resourceLocation}
                       </span>
                     )}
                     {getRequestStatusBadge(req.reqstatus)}
                   </div>
 
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-400">
                     Submitted: {formatDateTime(req.reqtime)}
                   </span>
                 </div>
@@ -324,29 +353,29 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
                 {/* Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
                   <div>
-                    <span className="text-slate-500 block">Requester:</span>
-                    <span className="text-slate-200 font-semibold text-sm">
+                    <span className="text-slate-400 block text-[11px]">Requester:</span>
+                    <span className="text-slate-800 font-semibold text-xs sm:text-sm">
                       {req.requesterName ?? "Unknown"}
                     </span>
-                    <span className="text-slate-400 block text-[11px] truncate">
+                    <span className="text-slate-500 block text-[11px] truncate">
                       {req.requesterEmail}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-slate-500 block">Requested As:</span>
+                    <span className="text-slate-400 block text-[11px]">Requested As:</span>
                     {req.requesterRoleName && req.requesterScopeName ? (
-                      <span className="text-indigo-300 font-medium inline-block mt-0.5 px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">
+                      <span className="text-indigo-700 font-medium inline-block mt-0.5 px-2 py-0.5 rounded bg-indigo-50 border border-indigo-100">
                         {req.requesterRoleName} ({req.requesterScopeName})
                       </span>
                     ) : (
-                      <span className="text-slate-400 italic">Standard Request</span>
+                      <span className="text-slate-500 italic">Standard Request</span>
                     )}
                   </div>
 
                   <div>
-                    <span className="text-slate-500 block">Requested Time Slot:</span>
-                    <span className="text-slate-300 font-medium block">
+                    <span className="text-slate-400 block text-[11px]">Requested Time Slot:</span>
+                    <span className="text-slate-800 font-semibold block">
                       {formatDateTime(req.starttime)}
                     </span>
                     <span className="text-slate-500 text-[11px]">
@@ -356,43 +385,35 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
                 </div>
 
                 {req.purpose && (
-                  <div className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 text-xs text-slate-300">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700">
                     <span className="text-slate-500 font-semibold mr-1">Purpose:</span>
                     {req.purpose}
                   </div>
                 )}
 
                 {/* Dropdown Toggle for Approval Hierarchy Chain */}
-                <div className="pt-2">
+                <div className="pt-1">
                   <button
                     type="button"
                     onClick={() => toggleExpand(req.reqid)}
-                    className="flex items-center gap-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors py-1 cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors py-1 cursor-pointer"
                   >
-                    <span>{isExpanded ? "Hide Approval Chain" : "View Approval Chain"}</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-bold">
+                    <span>{isExpanded ? "Hide Review Pipeline" : "View Review Pipeline"}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold">
                       {req.steps.length} tier{req.steps.length === 1 ? "" : "s"}
                     </span>
-                    <svg
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
+                    {isExpanded ? (
+                      <ChevronUp className="w-3.5 h-3.5 text-indigo-600" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                    )}
                   </button>
 
                   {/* Expanded Approval Steps Dropdown */}
                   {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2.5">
-                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
+                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <GitCommit className="w-3.5 h-3.5 text-indigo-600" />
                         Sequential Approval Pipeline
                       </p>
 
@@ -410,43 +431,43 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
                             return (
                               <div
                                 key={step.hid}
-                                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all ${
+                                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all ${
                                   isApproved
-                                    ? "bg-emerald-500/5 border-emerald-500/20"
+                                    ? "bg-emerald-50/50 border-emerald-200"
                                     : isRejected
-                                    ? "bg-rose-500/5 border-rose-500/20"
-                                    : "bg-slate-950/60 border-slate-800/70"
+                                    ? "bg-rose-50/50 border-rose-200"
+                                    : "bg-slate-50 border-slate-200"
                                 }`}
                               >
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-bold flex items-center justify-center">
-                                      {step.hlevel}
+                                    <span className="w-5 h-5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold flex items-center justify-center">
+                                      L{step.hlevel}
                                     </span>
-                                    <span className="text-xs font-bold text-white">
+                                    <span className="text-xs font-bold text-slate-900">
                                       {step.roleName}
                                     </span>
-                                    <span className="text-slate-400 text-xs">
-                                      Scope: <strong className="text-indigo-300 font-medium">{step.scopeName}</strong>
+                                    <span className="text-slate-500 text-xs">
+                                      Scope: <strong className="text-indigo-600 font-medium">{step.scopeName}</strong>
                                     </span>
                                   </div>
 
                                   {/* Reviewer Stamp */}
-                                  <div className="text-[11px] text-slate-400 pl-7 space-y-0.5">
+                                  <div className="text-[11px] text-slate-500 pl-7 space-y-0.5">
                                     {step.actionByName ? (
                                       <p>
-                                        Reviewed by: <strong className="text-slate-300">{step.actionByName}</strong>
+                                        Reviewed by: <strong className="text-slate-800">{step.actionByName}</strong>
                                         {step.actiontime && ` on ${formatDateTime(step.actiontime)}`}
                                       </p>
                                     ) : (
-                                      <p className="text-amber-400/80 italic">
-                                        Waiting for eligible co-approver action
+                                      <p className="text-amber-700 italic">
+                                        Waiting for eligible approver action
                                       </p>
                                     )}
 
                                     {step.shortcomment && (
-                                      <p className="text-slate-400 italic">
-                                        Note: &ldquo;{step.shortcomment}&rdquo;
+                                      <p className="text-slate-600 italic bg-white p-1.5 rounded border border-slate-200 mt-1">
+                                        &ldquo;{step.shortcomment}&rdquo;
                                       </p>
                                     )}
                                   </div>
@@ -471,4 +492,3 @@ export default function RequestsAdminView({ initialRequests }: RequestsAdminView
     </div>
   );
 }
-

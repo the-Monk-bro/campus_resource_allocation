@@ -3,6 +3,18 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { actOnApprovalAction, PendingApprovalItem } from "@/actions/approvalActions";
+import {
+  Check,
+  X,
+  MapPin,
+  Clock,
+  User,
+  Shield,
+  CheckCircle2,
+  AlertCircle,
+  Inbox,
+  Calendar,
+} from "lucide-react";
 
 interface ApprovalsViewProps {
   items: PendingApprovalItem[];
@@ -51,136 +63,152 @@ function ApprovalCard({ item }: { item: PendingApprovalItem }) {
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 hover:border-slate-700/80 rounded-3xl shadow-md overflow-hidden transition-all">
-      {/* Header */}
-      <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div className="space-y-2 flex-1">
-          {/* Resource + Level badge */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-xs font-bold text-slate-400 font-mono bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+    <div className="saas-card overflow-hidden">
+      {/* Header Info */}
+      <div className="p-5 sm:p-6 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
               Req #{item.reqid}
             </span>
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-base font-bold text-slate-900">
               {item.resourceName || item.resid}
             </h3>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-              Level {item.hlevel} Approval ({item.roleName} &bull; {item.scopeName})
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+              Level {item.hlevel} Approval ({item.roleName} &middot; {item.scopeName})
             </span>
-            {item.resourceLocation && (
-              <span className="text-xs text-slate-400 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                </svg>
-                {item.resourceLocation}
-              </span>
-            )}
           </div>
 
-          {/* Requester info & Requested As tag */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>
-                Requested by <strong className="text-slate-200">{item.requesterName || "Unknown"}</strong>
-                {item.requesterEmail && (
-                  <span className="text-slate-500 ml-1">({item.requesterEmail})</span>
-                )}
-              </span>
-            </div>
-
-            {(item.requesterRoleName || item.requesterScopeName) && (
-              <div className="flex items-center gap-1.5 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-xl">
-                <span className="text-slate-400 text-[11px]">Requested as:</span>
-                <span className="font-semibold text-indigo-200">{item.requesterRoleName || "Unknown Role"}</span>
-                {item.requesterScopeName && (
-                  <span className="text-indigo-400 font-normal">
-                    &bull; {item.requesterScopeName}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Purpose */}
-          {item.purpose ? (
-            <p className="text-sm text-slate-300 italic bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
-              &ldquo;{item.purpose}&rdquo;
-            </p>
-          ) : (
-            <p className="text-xs text-slate-500 italic">No purpose mentioned.</p>
+          {item.resourceLocation && (
+            <span className="text-xs text-slate-500 flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              <span>{item.resourceLocation}</span>
+            </span>
           )}
+        </div>
 
-          {/* Times */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
-            <div className="text-slate-400">
-              <span className="text-slate-500">From: </span>
-              <strong className="text-slate-200">{formatDateTime(item.starttime)}</strong>
+        {/* Requester Profile Strip */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-600 pt-1">
+          <div className="flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-slate-400" />
+            <span>
+              Requested by{" "}
+              <strong className="text-slate-900 font-semibold">
+                {item.requesterName || "Unknown"}
+              </strong>
+              {item.requesterEmail && (
+                <span className="text-slate-400 ml-1">({item.requesterEmail})</span>
+              )}
+            </span>
+          </div>
+
+          {(item.requesterRoleName || item.requesterScopeName) && (
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md text-[11px]">
+              <Shield className="w-3 h-3 text-indigo-500" />
+              <span className="text-slate-500">As:</span>
+              <span className="font-medium text-slate-800">
+                {item.requesterRoleName || "Member"}
+              </span>
+              {item.requesterScopeName && (
+                <span className="text-slate-500">&middot; {item.requesterScopeName}</span>
+              )}
             </div>
-            <div className="text-slate-400">
-              <span className="text-slate-500">To: </span>
-              <strong className="text-slate-200">{formatDateTime(item.endtime)}</strong>
-            </div>
-            <div className="text-[11px] text-slate-500 sm:col-span-2">
-              Requested on: {formatDateTime(item.reqtime)} &bull; Assigned to you: {formatDateTime(item.issuetime)}
-            </div>
+          )}
+        </div>
+
+        {/* Purpose */}
+        {item.purpose ? (
+          <div className="bg-slate-50 border border-slate-200/80 p-3 rounded-lg text-xs sm:text-sm text-slate-700 italic">
+            &ldquo;{item.purpose}&rdquo;
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 italic">No purpose specified.</p>
+        )}
+
+        {/* Timings */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 text-slate-600">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span>
+              From:{" "}
+              <strong className="text-slate-800">
+                {formatDateTime(item.starttime)}
+              </strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span>
+              To:{" "}
+              <strong className="text-slate-800">
+                {formatDateTime(item.endtime)}
+              </strong>
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-400 sm:col-span-2">
+            Requested: {formatDateTime(item.reqtime)} &middot; Assigned: {formatDateTime(item.issuetime)}
           </div>
         </div>
       </div>
 
-      {/* Action Panel */}
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-slate-800/60 pt-4 space-y-3">
-        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Comment <span className="text-rose-400 font-normal normal-case">(required for rejection)</span>
-        </label>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Add a comment about your decision..."
-          maxLength={100}
-          rows={2}
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-        />
+      {/* Decision Panel */}
+      <div className="px-5 sm:px-6 pb-5 border-t border-slate-100 pt-4 space-y-3 bg-slate-50/60">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">
+            Approval Comment{" "}
+            <span className="text-rose-600 font-normal">
+              (mandatory for rejection)
+            </span>
+          </label>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Add reasoning, requirements, or approval conditions..."
+            maxLength={100}
+            rows={2}
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-colors resize-none"
+          />
+        </div>
+
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[11px] text-slate-500">{comment.length}/100 characters</span>
+          <span className="text-[11px] text-slate-400">
+            {comment.length}/100 characters
+          </span>
+
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => handleAction("REJECT")}
               disabled={isActing || !!success}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-rose-700 hover:text-rose-800 bg-white hover:bg-rose-50 border border-rose-200 hover:border-rose-300 transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Reject
+              <X className="w-3.5 h-3.5" />
+              <span>Reject Request</span>
             </button>
+
             <button
               type="button"
               onClick={() => handleAction("APPROVE")}
               disabled={isActing || !!success}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              Approve
+              <Check className="w-3.5 h-3.5" />
+              <span>Approve Request</span>
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
-            {error}
+          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
+
         {success && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            {success}
+          <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{success}</span>
           </div>
         )}
       </div>
@@ -190,34 +218,34 @@ function ApprovalCard({ item }: { item: PendingApprovalItem }) {
 
 export default function ApprovalsView({ items }: ApprovalsViewProps) {
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-slate-800">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Approvals</h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Review and act on pending resource allocation requests assigned to you.
-        </p>
-      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+            Approvals Worklist
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Review and sign off on facility reservation requests requiring your tier authorization.
+          </p>
+        </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-3">
-        <div className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-400">
-          <span className="font-bold text-white">{items.length}</span> pending
-          {items.length !== 1 ? " approvals" : " approval"}
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 bg-amber-50 border border-amber-200 rounded-md text-xs font-semibold text-amber-800">
+            {items.length} Pending {items.length === 1 ? "Review" : "Reviews"}
+          </span>
         </div>
       </div>
 
       {/* Cards */}
       {items.length === 0 ? (
-        <div className="text-center py-20 bg-slate-900/40 border border-slate-800/80 rounded-3xl">
-          <div className="w-14 h-14 rounded-2xl bg-slate-800/80 text-slate-400 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        <div className="saas-card p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-white">All clear!</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            You have no pending approval requests at this time. Check back later.
+          <h3 className="text-sm font-bold text-slate-900">All Queues Cleared!</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            You currently have no pending approval steps requiring your action. New requests will appear here automatically.
           </p>
         </div>
       ) : (

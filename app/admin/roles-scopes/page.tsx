@@ -72,12 +72,17 @@ export default async function AdminRolesScopesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      <div className="pb-4 border-b border-slate-800">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+      <div className="pb-5 border-b border-slate-200">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1">
+            Access Governance
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           Roles & Institutional Scopes
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Manage system-wide user roles, organizational departments, clubs, and governance scopes that power institutional authorization and multi-level approvals.
+        <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-3xl">
+          Define institutional roles, academic departments, clubs, and governance scopes that power authorization checks and multi-level approval hierarchies.
         </p>
       </div>
 

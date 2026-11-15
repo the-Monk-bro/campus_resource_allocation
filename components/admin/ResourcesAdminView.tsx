@@ -8,6 +8,24 @@ import {
   ResourceFormData,
   HierarchyStepInput,
 } from "@/actions/adminActions";
+import {
+  Building2,
+  CheckCircle2,
+  Wrench,
+  Users,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  X,
+  MapPin,
+  GitCommit,
+  AlertCircle,
+  Tag,
+  Shield,
+  Loader2,
+  ChevronDown,
+} from "lucide-react";
 
 export interface OptionRole {
   roleId: string;
@@ -413,38 +431,50 @@ export default function ResourcesAdminView({
       {/* ── Summary Counters & Add Button ────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">
-              Total Resources
-            </span>
-            <span className="text-2xl font-black text-white mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-slate-400 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Total Facilities
+              </span>
+              <Building2 className="w-4 h-4 text-slate-400" />
+            </div>
+            <span className="text-2xl font-black text-slate-900 mt-1 block">
               {resources.length}
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-emerald-400 font-medium uppercase tracking-wider block">
-              Available
-            </span>
-            <span className="text-2xl font-black text-emerald-400 mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-emerald-600 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+                Available
+              </span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
+            <span className="text-2xl font-black text-emerald-700 mt-1 block">
               {resources.filter((r) => r.status === "AVAILABLE").length}
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-amber-400 font-medium uppercase tracking-wider block">
-              In Maintenance
-            </span>
-            <span className="text-2xl font-black text-amber-300 mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-amber-600 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                Maintenance
+              </span>
+              <Wrench className="w-4 h-4 text-amber-600" />
+            </div>
+            <span className="text-2xl font-black text-amber-700 mt-1 block">
               {resources.filter((r) => r.status === "MAINTENANCE").length}
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-indigo-400 font-medium uppercase tracking-wider block">
-              Total Seating
-            </span>
-            <span className="text-2xl font-black text-indigo-300 mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-indigo-600 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+                Total Seating
+              </span>
+              <Users className="w-4 h-4 text-indigo-600" />
+            </div>
+            <span className="text-2xl font-black text-indigo-700 mt-1 block">
               {resources.reduce((acc, r) => acc + (r.capacity || 0), 0).toLocaleString()}
             </span>
           </div>
@@ -453,35 +483,25 @@ export default function ResourcesAdminView({
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 self-stretch sm:self-auto"
+          className="px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 self-stretch sm:self-auto"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Add New Resource</span>
+          <Plus className="w-4 h-4" />
+          <span>Provision New Space</span>
         </button>
       </div>
 
       {/* ── Filters & Search Toolbar ─────────────────────────────────── */}
-      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-4">
+      <div className="saas-card p-4 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
           {/* Search Box */}
           <div className="relative flex-1">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by facility name, ID, location, or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-600 transition-colors"
             />
           </div>
 
@@ -490,7 +510,7 @@ export default function ResourcesAdminView({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-600"
             >
               <option value="ALL">All Statuses</option>
               <option value="AVAILABLE">Available</option>
@@ -502,7 +522,7 @@ export default function ResourcesAdminView({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-600"
             >
               <option value="name">Sort by Name</option>
               <option value="id">Sort by Resource ID</option>
@@ -513,15 +533,15 @@ export default function ResourcesAdminView({
         </div>
 
         {/* Category Pills */}
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 pt-2 border-t border-slate-100 overflow-x-auto pb-1">
           <span className="text-[11px] font-semibold text-slate-400 shrink-0">Type Filter:</span>
           <button
             type="button"
             onClick={() => setTypeFilter("ALL")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               typeFilter === "ALL"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                ? "bg-indigo-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
             }`}
           >
             All Types ({resources.length})
@@ -531,10 +551,10 @@ export default function ResourcesAdminView({
               key={t}
               type="button"
               onClick={() => setTypeFilter(t)}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 typeFilter === t
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
               }`}
             >
               {t}
@@ -545,8 +565,8 @@ export default function ResourcesAdminView({
 
       {/* ── Resource Cards Grid ──────────────────────────────────────── */}
       {filteredResources.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-          <p className="text-sm font-semibold text-slate-300">No matching resources found</p>
+        <div className="p-12 text-center saas-card space-y-3">
+          <p className="text-sm font-semibold text-slate-800">No matching facilities found</p>
           <p className="text-xs text-slate-500">Try adjusting your filters or search keywords.</p>
         </div>
       ) : (
@@ -554,29 +574,29 @@ export default function ResourcesAdminView({
           {filteredResources.map((res) => (
             <div
               key={res.id}
-              className="p-5 rounded-3xl bg-slate-900/85 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-4 shadow-xl"
+              className="p-5 saas-card hover:border-slate-300 transition-all flex flex-col justify-between space-y-4 shadow-xs"
             >
               <div className="space-y-3">
                 {/* ID & Status */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400">
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
                     {res.id}
                   </span>
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
                       res.status === "AVAILABLE"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         : res.status === "MAINTENANCE"
-                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                        : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                        ? "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-slate-100 text-slate-600 border border-slate-200"
                     }`}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         res.status === "AVAILABLE"
-                          ? "bg-emerald-400"
+                          ? "bg-emerald-500"
                           : res.status === "MAINTENANCE"
-                          ? "bg-amber-400"
+                          ? "bg-amber-500"
                           : "bg-slate-400"
                       }`}
                     />
@@ -586,17 +606,17 @@ export default function ResourcesAdminView({
 
                 {/* Name, Type, Capacity */}
                 <div>
-                  <h3 className="text-base font-bold text-white tracking-tight">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                     {res.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     {res.type && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
                         {res.type}
                       </span>
                     )}
                     {res.capacity && (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-500">
                         • {res.capacity} Seats
                       </span>
                     )}
@@ -604,33 +624,28 @@ export default function ResourcesAdminView({
                 </div>
 
                 {res.location && (
-                  <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                  <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">{res.location}</span>
                   </p>
                 )}
 
                 {/* Usage Counters */}
-                <div className="text-[11px] text-slate-500 bg-slate-950/40 px-3 py-1.5 rounded-xl border border-slate-800/60 flex items-center justify-between">
+                <div className="text-[11px] text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 flex items-center justify-between">
                   <span>Usage History</span>
-                  <span className="text-slate-300 font-medium">
+                  <span className="text-slate-800 font-medium">
                     {res.activeAllocations} active • {res.totalRequests} requests
                   </span>
                 </div>
 
                 {/* Approval Pipeline Preview */}
-                <div className="pt-2 border-t border-slate-800/60 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                    <span className="flex items-center gap-1.5 text-purple-300 font-semibold">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                    <span className="flex items-center gap-1.5 text-indigo-700 font-semibold">
+                      <GitCommit className="w-3.5 h-3.5" />
                       Approval Chain
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-[10px] text-slate-400 font-mono">
                       {res.hierarchies?.length || 0} stage{(res.hierarchies?.length || 0) === 1 ? "" : "s"}
                     </span>
                   </div>
@@ -640,39 +655,37 @@ export default function ResourcesAdminView({
                       {res.hierarchies.map((h) => (
                         <div
                           key={h.hlevel}
-                          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-center justify-between gap-2"
+                          className="text-[11px] px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2"
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold text-[10px] shrink-0">
+                            <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold text-[10px] shrink-0">
                               L{h.hlevel}
                             </span>
-                            <span className="font-semibold text-slate-200 truncate">
+                            <span className="font-semibold text-slate-800 truncate">
                               {h.roleName || h.roleId}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                          <span className="text-[10px] text-slate-500 shrink-0 font-medium">
                             {h.scopeName || "(Any Scope)"}
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-amber-400/80 italic">No approval hierarchy configured</p>
+                    <p className="text-[11px] text-amber-600 italic">No approval hierarchy configured</p>
                   )}
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-800/80">
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => openEditModal(res)}
-                  className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="flex-1 py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>Edit Facility & Chain</span>
+                  <Edit className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Edit Facility</span>
                 </button>
 
                 <button
@@ -681,11 +694,9 @@ export default function ResourcesAdminView({
                     setResourceToDelete(res);
                     setDeleteModalError(null);
                   }}
-                  className="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-1.5 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Trash2 className="w-3.5 h-3.5" />
                   <span>Delete</span>
                 </button>
               </div>
@@ -696,33 +707,34 @@ export default function ResourcesAdminView({
 
       {/* ── MODAL: Create Resource ───────────────────────────────────── */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs overflow-y-auto">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-5 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-white">Add New Facility & Pipeline</h3>
-                <p className="text-xs text-slate-400">Configure facility attributes and required approval chain</p>
+                <h3 className="text-base font-bold text-slate-900">Provision New Space & Approval Pipeline</h3>
+                <p className="text-xs text-slate-500">Configure space specifications and required sequential sign-offs</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {createModalError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
-                {createModalError}
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{createModalError}</span>
               </div>
             )}
 
             <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Resource ID <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Resource ID <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -730,13 +742,13 @@ export default function ResourcesAdminView({
                     placeholder="e.g. LH-301, LAB-ROBOTICS"
                     value={newResource.id}
                     onChange={(e) => setNewResource({ ...newResource, id: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs font-mono uppercase"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs font-mono uppercase"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Facility Name <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Facility Name <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -744,15 +756,15 @@ export default function ResourcesAdminView({
                     placeholder="e.g. Lecture Hall 301"
                     value={newResource.name}
                     onChange={(e) => setNewResource({ ...newResource, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Facility Type <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Facility Type <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -761,7 +773,7 @@ export default function ResourcesAdminView({
                     placeholder="e.g. Lecture Hall, Computer Lab"
                     value={newResource.type}
                     onChange={(e) => setNewResource({ ...newResource, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                   <datalist id="resource-type-suggestions">
                     {COMMON_RESOURCE_TYPES.map((t) => (
@@ -771,8 +783,8 @@ export default function ResourcesAdminView({
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Capacity (Seats) <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Capacity (Seats) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -780,15 +792,15 @@ export default function ResourcesAdminView({
                     min={1}
                     value={newResource.capacity}
                     onChange={(e) => setNewResource({ ...newResource, capacity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Location Details <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Location Details <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -796,16 +808,16 @@ export default function ResourcesAdminView({
                     placeholder="e.g. Academic POD-1D, 3rd Floor"
                     value={newResource.location}
                     onChange={(e) => setNewResource({ ...newResource, location: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Initial Status</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Initial Status</label>
                   <select
                     value={newResource.status}
                     onChange={(e) => setNewResource({ ...newResource, status: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   >
                     <option value="AVAILABLE">AVAILABLE</option>
                     <option value="MAINTENANCE">MAINTENANCE</option>
@@ -815,22 +827,23 @@ export default function ResourcesAdminView({
               </div>
 
               {/* ── Approval Hierarchy Pipeline Section ────────────── */}
-              <div className="space-y-3 pt-3 border-t border-slate-800">
+              <div className="space-y-3 pt-3 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-slate-200 font-bold text-xs">
-                      Approval Hierarchy Pipeline <span className="text-rose-400">*</span>
+                    <label className="block text-slate-900 font-bold text-xs">
+                      Approval Hierarchy Pipeline <span className="text-rose-500">*</span>
                     </label>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-500">
                       Sequential approval stages. Role is mandatory; Scope is optional.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={addCreateHierarchyStep}
-                    className="px-2.5 py-1 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
-                    <span>+ Add Level</span>
+                    <Plus className="w-3 h-3" />
+                    <span>Add Level</span>
                   </button>
                 </div>
 
@@ -838,27 +851,24 @@ export default function ResourcesAdminView({
                   {(newResource.hierarchies || []).map((step, idx) => (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center gap-2.5"
+                      className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center gap-2.5"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-lg bg-purple-600/20 text-purple-300 font-black text-xs flex items-center justify-center shrink-0 border border-purple-500/30">
-                          {step.hlevel}
+                        <span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-200">
+                          L{step.hlevel}
                         </span>
-                        <span className="text-slate-400 text-[11px] font-medium sm:hidden">
+                        <span className="text-slate-600 text-[11px] font-medium sm:hidden">
                           Level {step.hlevel}
                         </span>
                       </div>
 
                       {/* Role Select (Mandatory) */}
                       <div className="flex-1">
-                        <label className="block text-[10px] text-slate-400 font-semibold mb-0.5 sm:hidden">
-                          Approver Role * (Mandatory)
-                        </label>
                         <select
                           required
                           value={step.roleId}
                           onChange={(e) => updateCreateHierarchyStep(idx, "roleId", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:border-indigo-600"
                         >
                           <option value="" disabled>Select Role *</option>
                           {availableRoles.map((r) => (
@@ -871,13 +881,10 @@ export default function ResourcesAdminView({
 
                       {/* Scope Select (Optional) */}
                       <div className="flex-1">
-                        <label className="block text-[10px] text-slate-400 font-semibold mb-0.5 sm:hidden">
-                          Scope (Optional)
-                        </label>
                         <select
                           value={step.scopeId || ""}
                           onChange={(e) => updateCreateHierarchyStep(idx, "scopeId", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:border-indigo-600"
                         >
                           <option value="">(None / Any Scope)</option>
                           {availableScopes.map((s) => (
@@ -898,42 +905,31 @@ export default function ResourcesAdminView({
                             ? "A resource must have at least 1 approval hierarchy"
                             : "Remove this approval level"
                         }
-                        className={`p-2 rounded-xl border text-xs transition-colors shrink-0 ${
+                        className={`p-1.5 rounded-lg border text-xs transition-colors shrink-0 ${
                           (newResource.hierarchies?.length || 0) <= 1
-                            ? "opacity-30 cursor-not-allowed border-slate-800 text-slate-600"
-                            : "text-rose-400 hover:text-white hover:bg-rose-600/30 border-rose-500/20 cursor-pointer"
+                            ? "opacity-30 cursor-not-allowed border-slate-200 text-slate-400"
+                            : "text-rose-600 hover:bg-rose-50 border-rose-200 cursor-pointer"
                         }`}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
                 </div>
-
-                {(newResource.hierarchies?.length || 0) <= 1 && (
-                  <p className="text-[11px] text-amber-400/80 flex items-center gap-1.5 mt-1">
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    A resource must always have at least 1 approval hierarchy step.
-                  </p>
-                )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-md shadow-indigo-600/30 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                 >
                   {isPending ? "Creating..." : "Save Resource & Pipeline"}
                 </button>
@@ -945,46 +941,47 @@ export default function ResourcesAdminView({
 
       {/* ── MODAL: Edit Resource ─────────────────────────────────────── */}
       {resourceToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs overflow-y-auto">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-5 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-white">Edit Facility & Approval Chain</h3>
-                <span className="text-xs font-mono text-indigo-400">{editFormData.id}</span>
+                <h3 className="text-base font-bold text-slate-900">Edit Facility & Approval Chain</h3>
+                <span className="text-xs font-mono text-indigo-600">{editFormData.id}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setResourceToEdit(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {editModalError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
-                {editModalError}
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{editModalError}</span>
               </div>
             )}
 
             <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Facility Name <span className="text-rose-400">*</span>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Facility Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Type <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Type <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -992,7 +989,7 @@ export default function ResourcesAdminView({
                     list="resource-edit-type-suggestions"
                     value={editFormData.type}
                     onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                   <datalist id="resource-edit-type-suggestions">
                     {COMMON_RESOURCE_TYPES.map((t) => (
@@ -1002,8 +999,8 @@ export default function ResourcesAdminView({
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Capacity <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Capacity <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1011,31 +1008,31 @@ export default function ResourcesAdminView({
                     min={1}
                     value={editFormData.capacity}
                     onChange={(e) => setEditFormData({ ...editFormData, capacity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Location Details <span className="text-rose-400">*</span>
+                  <label className="block text-slate-700 font-semibold mb-1">
+                    Location Details <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={editFormData.location}
                     onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Operational Status</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Operational Status</label>
                   <select
                     value={editFormData.status}
                     onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                   >
                     <option value="AVAILABLE">AVAILABLE</option>
                     <option value="MAINTENANCE">MAINTENANCE</option>
@@ -1045,22 +1042,23 @@ export default function ResourcesAdminView({
               </div>
 
               {/* ── Approval Hierarchy Pipeline Section ────────────── */}
-              <div className="space-y-3 pt-3 border-t border-slate-800">
+              <div className="space-y-3 pt-3 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-slate-200 font-bold text-xs">
-                      Approval Hierarchy Pipeline <span className="text-rose-400">*</span>
+                    <label className="block text-slate-900 font-bold text-xs">
+                      Approval Hierarchy Pipeline <span className="text-rose-500">*</span>
                     </label>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-500">
                       Sequential approval stages. Role is mandatory; Scope is optional.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={addEditHierarchyStep}
-                    className="px-2.5 py-1 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
-                    <span>+ Add Level</span>
+                    <Plus className="w-3 h-3" />
+                    <span>Add Level</span>
                   </button>
                 </div>
 
@@ -1068,27 +1066,24 @@ export default function ResourcesAdminView({
                   {(editFormData.hierarchies || []).map((step, idx) => (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center gap-2.5"
+                      className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center gap-2.5"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-lg bg-purple-600/20 text-purple-300 font-black text-xs flex items-center justify-center shrink-0 border border-purple-500/30">
-                          {step.hlevel}
+                        <span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-200">
+                          L{step.hlevel}
                         </span>
-                        <span className="text-slate-400 text-[11px] font-medium sm:hidden">
+                        <span className="text-slate-600 text-[11px] font-medium sm:hidden">
                           Level {step.hlevel}
                         </span>
                       </div>
 
                       {/* Role Select (Mandatory) */}
                       <div className="flex-1">
-                        <label className="block text-[10px] text-slate-400 font-semibold mb-0.5 sm:hidden">
-                          Approver Role * (Mandatory)
-                        </label>
                         <select
                           required
                           value={step.roleId}
                           onChange={(e) => updateEditHierarchyStep(idx, "roleId", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:border-indigo-600"
                         >
                           <option value="" disabled>Select Role *</option>
                           {availableRoles.map((r) => (
@@ -1101,13 +1096,10 @@ export default function ResourcesAdminView({
 
                       {/* Scope Select (Optional) */}
                       <div className="flex-1">
-                        <label className="block text-[10px] text-slate-400 font-semibold mb-0.5 sm:hidden">
-                          Scope (Optional)
-                        </label>
                         <select
                           value={step.scopeId || ""}
                           onChange={(e) => updateEditHierarchyStep(idx, "scopeId", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:border-indigo-600"
                         >
                           <option value="">(None / Any Scope)</option>
                           {availableScopes.map((s) => (
@@ -1128,42 +1120,31 @@ export default function ResourcesAdminView({
                             ? "A resource must always have at least 1 approval hierarchy"
                             : "Remove this approval level"
                         }
-                        className={`p-2 rounded-xl border text-xs transition-colors shrink-0 ${
+                        className={`p-1.5 rounded-lg border text-xs transition-colors shrink-0 ${
                           (editFormData.hierarchies?.length || 0) <= 1
-                            ? "opacity-30 cursor-not-allowed border-slate-800 text-slate-600"
-                            : "text-rose-400 hover:text-white hover:bg-rose-600/30 border-rose-500/20 cursor-pointer"
+                            ? "opacity-30 cursor-not-allowed border-slate-200 text-slate-400"
+                            : "text-rose-600 hover:bg-rose-50 border-rose-200 cursor-pointer"
                         }`}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
                 </div>
-
-                {(editFormData.hierarchies?.length || 0) <= 1 && (
-                  <p className="text-[11px] text-amber-400/80 flex items-center gap-1.5 mt-1">
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    A resource must always have at least 1 approval hierarchy step.
-                  </p>
-                )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setResourceToEdit(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-md shadow-indigo-600/30 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                 >
                   {isPending ? "Saving..." : "Update Resource & Pipeline"}
                 </button>
@@ -1175,36 +1156,34 @@ export default function ResourcesAdminView({
 
       {/* ── MODAL: Delete Resource ───────────────────────────────────── */}
       {resourceToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-rose-600" />
               </div>
-              <h3 className="text-base font-bold text-white">Delete Facility</h3>
+              <h3 className="text-base font-bold text-slate-900">Delete Facility</h3>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Are you sure you want to delete resource{" "}
-              <strong className="text-white">{resourceToDelete.name} ({resourceToDelete.id})</strong>?
+              <strong className="text-slate-900">{resourceToDelete.name} ({resourceToDelete.id})</strong>?
             </p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               This will remove the facility, its approval hierarchy pipeline, and associated requests/allocations in a safe database transaction.
             </p>
 
             {deleteModalError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {deleteModalError}
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setResourceToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1212,7 +1191,7 @@ export default function ResourcesAdminView({
                 type="button"
                 disabled={isPending}
                 onClick={handleDeleteSubmit}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shadow-md shadow-rose-600/30 cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
               >
                 {isPending ? "Deleting..." : "Permanently Delete"}
               </button>

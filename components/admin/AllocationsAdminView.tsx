@@ -2,6 +2,21 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import {
+  Search,
+  Calendar,
+  Clock,
+  ArrowRight,
+  Filter,
+  CheckCircle2,
+  PlayCircle,
+  CalendarRange,
+  XCircle,
+  Inbox,
+  User,
+  Building2,
+  Tag,
+} from "lucide-react";
 
 export interface AdminAllocationItem {
   allocationid: number;
@@ -41,35 +56,35 @@ function getAllocationStatusBadge(status: string) {
   switch (status) {
     case "SCHEDULED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           Scheduled
         </span>
       );
     case "ONGOING":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          Ongoing
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+          Ongoing Now
         </span>
       );
     case "COMPLETED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
           <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
           Completed
         </span>
       );
     case "CANCELLED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           Cancelled
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
           {status}
         </span>
       );
@@ -139,73 +154,77 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
     <div className="space-y-6">
       {/* ── Summary Stats ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">
-            Total Allocations
-          </span>
-          <span className="text-2xl font-black text-white mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Total Allocations
+            </span>
+            <CalendarRange className="w-4 h-4 text-slate-400" />
+          </div>
+          <span className="text-2xl font-black text-slate-900 mt-1 block">
             {initialAllocations.length}
           </span>
           <span className="text-[11px] text-slate-500">Across all resources</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-emerald-400 font-medium uppercase tracking-wider block">
-            Scheduled
-          </span>
-          <span className="text-2xl font-black text-emerald-400 mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-emerald-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+              Scheduled
+            </span>
+            <Calendar className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="text-2xl font-black text-emerald-700 mt-1 block">
             {initialAllocations.filter((a) => a.allocationstatus === "SCHEDULED").length}
           </span>
           <span className="text-[11px] text-slate-500">Upcoming confirmed slots</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-indigo-400 font-medium uppercase tracking-wider block">
-            Ongoing / Active
-          </span>
-          <span className="text-2xl font-black text-indigo-300 mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-indigo-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+              Ongoing Active
+            </span>
+            <PlayCircle className="w-4 h-4 text-indigo-600" />
+          </div>
+          <span className="text-2xl font-black text-indigo-700 mt-1 block">
             {initialAllocations.filter((a) => a.allocationstatus === "ONGOING").length}
           </span>
           <span className="text-[11px] text-slate-500">Currently in progress</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">
-            Completed
-          </span>
-          <span className="text-2xl font-black text-slate-300 mt-1 block">
+        <div className="saas-card p-4 sm:p-5">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Completed
+            </span>
+            <CheckCircle2 className="w-4 h-4 text-slate-400" />
+          </div>
+          <span className="text-2xl font-black text-slate-700 mt-1 block">
             {initialAllocations.filter((a) => a.allocationstatus === "COMPLETED").length}
           </span>
-          <span className="text-[11px] text-slate-500">Historical slots</span>
+          <span className="text-[11px] text-slate-500">Archived past slots</span>
         </div>
       </div>
 
       {/* ── Search & Filter Controls ─────────────────────────────────── */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+      <div className="saas-card p-4 sm:p-5 space-y-4">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search bar */}
           <div className="relative flex-1">
-            <svg
-              className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by facility, location, requester name, or purpose..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 transition-colors"
+              className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 Clear
               </button>
@@ -214,11 +233,11 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-slate-400 font-medium">Sort by:</span>
+            <span className="text-xs text-slate-500 font-medium">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-600 transition-colors"
             >
               <option value="time_desc">Booking Start (Newest First)</option>
               <option value="time_asc">Booking Start (Oldest First)</option>
@@ -229,22 +248,25 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
           {/* Status Filters */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-slate-400 font-medium mr-1">Status:</span>
+            <span className="text-xs text-slate-400 font-medium mr-1 flex items-center gap-1">
+              <Filter className="w-3 h-3 text-slate-400" />
+              Status:
+            </span>
             {(["ALL", "SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED"] as const).map((st) => (
               <button
                 key={st}
                 type="button"
                 onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   statusFilter === st
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
                 }`}
               >
-                {st === "ALL" ? "All" : st}
+                {st === "ALL" ? "All Statuses" : st}
               </button>
             ))}
           </div>
@@ -252,14 +274,17 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
           {/* Type Filters */}
           {resourceTypes.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-slate-400 font-medium mr-1">Type:</span>
+              <span className="text-xs text-slate-400 font-medium mr-1 flex items-center gap-1">
+                <Tag className="w-3 h-3 text-slate-400" />
+                Type:
+              </span>
               <button
                 type="button"
                 onClick={() => setTypeFilter("ALL")}
-                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   typeFilter === "ALL"
-                    ? "bg-slate-700 text-white"
-                    : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    ? "bg-slate-800 text-white"
+                    : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
                 }`}
               >
                 All
@@ -269,10 +294,10 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
                   key={t}
                   type="button"
                   onClick={() => setTypeFilter(t)}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     typeFilter === t
-                      ? "bg-purple-600 text-white shadow-sm"
-                      : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
                   }`}
                 >
                   {t}
@@ -285,8 +310,11 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
 
       {/* ── Allocations Table / Card List ────────────────────────────── */}
       {filteredAllocations.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-          <p className="text-sm font-semibold text-slate-300">No matching allocations found</p>
+        <div className="p-12 text-center saas-card space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <Inbox className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-semibold text-slate-800">No matching allocations found</p>
           <p className="text-xs text-slate-500">Try adjusting your filters or search keywords.</p>
         </div>
       ) : (
@@ -294,19 +322,19 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
           {filteredAllocations.map((alloc) => (
             <div
               key={alloc.allocationid}
-              className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+              className="p-5 saas-card hover:border-slate-300 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs"
             >
               {/* Left Column: Resource & Requester Details */}
               <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400 font-bold">
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-bold">
                     ALLOC-{alloc.allocationid}
                   </span>
-                  <span className="text-sm font-extrabold text-white">
+                  <span className="text-sm font-bold text-slate-900">
                     {alloc.resourceName ?? alloc.resourceId}
                   </span>
                   {alloc.resourceLocation && (
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       • {alloc.resourceLocation}
                     </span>
                   )}
@@ -314,43 +342,48 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
                 </div>
 
                 {alloc.purpose && (
-                  <p className="text-xs text-slate-300 line-clamp-2 max-w-2xl">
-                    <span className="text-slate-500">Purpose: </span>
+                  <p className="text-xs text-slate-700 line-clamp-2 max-w-2xl bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <span className="text-slate-400 font-medium">Purpose: </span>
                     {alloc.purpose}
                   </p>
                 )}
 
-                <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap pt-0.5">
-                  <span>
-                    Booked by: <strong className="text-slate-200">{alloc.requesterName ?? alloc.requesterEmail}</strong>
+                <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap pt-0.5">
+                  <span className="flex items-center gap-1">
+                    <User className="w-3 h-3 text-slate-400" />
+                    Booked by: <strong className="text-slate-800">{alloc.requesterName ?? alloc.requesterEmail}</strong>
                   </span>
                   {alloc.requesterRoleName && alloc.requesterScopeName && (
-                    <span className="text-indigo-300 text-[11px] px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">
-                      As {alloc.requesterRoleName} ({alloc.requesterScopeName})
+                    <span className="text-indigo-700 text-[11px] px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 font-medium">
+                      {alloc.requesterRoleName} ({alloc.requesterScopeName})
                     </span>
                   )}
-                  <span className="text-slate-500 font-mono text-[11px]">
+                  <span className="text-slate-400 font-mono text-[11px]">
                     (Request #{alloc.reqid})
                   </span>
                 </div>
               </div>
 
               {/* Right Column: Time Slot & Quick Action */}
-              <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-2 shrink-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-800/80">
-                <div className="text-xs text-right space-y-0.5">
-                  <p className="text-slate-400 font-medium">
-                    Start: <span className="text-slate-200 font-semibold">{formatDateTime(alloc.starttime)}</span>
+              <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-2 shrink-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100">
+                <div className="text-xs text-left lg:text-right space-y-0.5">
+                  <p className="text-slate-500 font-medium flex items-center lg:justify-end gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Start:</span>
+                    <strong className="text-slate-800 font-semibold">{formatDateTime(alloc.starttime)}</strong>
                   </p>
-                  <p className="text-slate-400 font-medium">
-                    End: <span className="text-slate-200 font-semibold">{formatDateTime(alloc.endtime)}</span>
+                  <p className="text-slate-500 font-medium flex items-center lg:justify-end gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>End:</span>
+                    <strong className="text-slate-800 font-semibold">{formatDateTime(alloc.endtime)}</strong>
                   </p>
                 </div>
                 <Link
                   href="/admin/requests"
-                  className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 mt-1"
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 mt-1"
                 >
-                  <span>View Full Request Chain</span>
-                  <span>→</span>
+                  <span>Audit Request Chain</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
@@ -360,4 +393,3 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
     </div>
   );
 }
-

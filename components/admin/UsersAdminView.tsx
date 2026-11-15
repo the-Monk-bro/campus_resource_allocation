@@ -7,6 +7,23 @@ import {
   assignRoleToUserAction,
   revokeRoleFromUserAction,
 } from "@/actions/adminActions";
+import {
+  Users,
+  ShieldCheck,
+  Layers,
+  Search,
+  Plus,
+  Trash2,
+  X,
+  AlertCircle,
+  Calendar,
+  Phone,
+  Mail,
+  UserPlus,
+  ShieldAlert,
+  Inbox,
+  Clock,
+} from "lucide-react";
 
 export interface UserRoleAssignmentDetail {
   assignmentId: number;
@@ -224,21 +241,27 @@ export default function UsersAdminView({
     <div className="space-y-6">
       {/* ── Summary Counters ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">
-            Registered Users
-          </span>
-          <span className="text-2xl font-black text-white mt-1 block">
+        <div className="saas-card p-4">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Registered Accounts
+            </span>
+            <Users className="w-4 h-4 text-slate-400" />
+          </div>
+          <span className="text-2xl font-black text-slate-900 mt-1 block">
             {users.length}
           </span>
-          <span className="text-[11px] text-slate-500">Total campus accounts</span>
+          <span className="text-[11px] text-slate-500">Total campus users</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-indigo-400 font-medium uppercase tracking-wider block">
-            Active Role Grants
-          </span>
-          <span className="text-2xl font-black text-indigo-300 mt-1 block">
+        <div className="saas-card p-4">
+          <div className="flex items-center justify-between text-indigo-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+              Active Role Grants
+            </span>
+            <ShieldCheck className="w-4 h-4 text-indigo-600" />
+          </div>
+          <span className="text-2xl font-black text-indigo-700 mt-1 block">
             {users.reduce(
               (acc, u) => acc + u.assignments.filter((a) => a.isActive).length,
               0
@@ -247,53 +270,51 @@ export default function UsersAdminView({
           <span className="text-[11px] text-slate-500">Live authorizations</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-purple-400 font-medium uppercase tracking-wider block">
-            Available Roles
-          </span>
-          <span className="text-2xl font-black text-purple-300 mt-1 block">
+        <div className="saas-card p-4">
+          <div className="flex items-center justify-between text-purple-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
+              Defined Roles
+            </span>
+            <ShieldCheck className="w-4 h-4 text-purple-600" />
+          </div>
+          <span className="text-2xl font-black text-purple-700 mt-1 block">
             {availableRoles.length}
           </span>
-          <span className="text-[11px] text-slate-500">Defined role titles</span>
+          <span className="text-[11px] text-slate-500">System roles</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-          <span className="text-xs text-emerald-400 font-medium uppercase tracking-wider block">
-            Jurisdiction Scopes
-          </span>
-          <span className="text-2xl font-black text-emerald-400 mt-1 block">
+        <div className="saas-card p-4">
+          <div className="flex items-center justify-between text-emerald-600 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+              Jurisdictions
+            </span>
+            <Layers className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="text-2xl font-black text-emerald-700 mt-1 block">
             {availableScopes.length}
           </span>
-          <span className="text-[11px] text-slate-500">Dept, course, club scopes</span>
+          <span className="text-[11px] text-slate-500">Dept, club, centers</span>
         </div>
       </div>
 
       {/* ── Search & Filter Controls ─────────────────────────────────── */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+      <div className="saas-card p-4 sm:p-5 space-y-4">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search bar */}
           <div className="relative flex-1">
-            <svg
-              className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by user name, email, phone, role title, or scope..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 transition-colors"
+              className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 Clear
               </button>
@@ -302,11 +323,11 @@ export default function UsersAdminView({
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-slate-400 font-medium">Sort by:</span>
+            <span className="text-xs text-slate-500 font-medium">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-600 transition-colors"
             >
               <option value="name">Name (A-Z)</option>
               <option value="email">Email (A-Z)</option>
@@ -316,15 +337,15 @@ export default function UsersAdminView({
         </div>
 
         {/* Filter by Role */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-800/60">
+        <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100">
           <span className="text-xs text-slate-400 font-medium mr-1">Filter Role:</span>
           <button
             type="button"
             onClick={() => setRoleFilter("ALL")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               roleFilter === "ALL"
-                ? "bg-slate-700 text-white"
-                : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                ? "bg-indigo-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
             }`}
           >
             All Roles
@@ -334,10 +355,10 @@ export default function UsersAdminView({
               key={r.roleId}
               type="button"
               onClick={() => setRoleFilter(r.roleId)}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 roleFilter === r.roleId
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
               }`}
             >
               {r.roleName}
@@ -348,8 +369,11 @@ export default function UsersAdminView({
 
       {/* ── Users List / Cards ───────────────────────────────────────── */}
       {filteredUsers.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-          <p className="text-sm font-semibold text-slate-300">No matching users found</p>
+        <div className="p-12 text-center saas-card space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <Inbox className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-semibold text-slate-800">No matching users found</p>
           <p className="text-xs text-slate-500">Try adjusting your filters or search keywords.</p>
         </div>
       ) : (
@@ -362,40 +386,48 @@ export default function UsersAdminView({
             return (
               <div
                 key={u.id}
-                className="p-5 sm:p-6 rounded-3xl bg-slate-900/85 border border-slate-800 hover:border-slate-700/80 transition-all space-y-4 shadow-xl"
+                className="p-5 sm:p-6 saas-card hover:border-slate-300 transition-all space-y-4 shadow-xs"
               >
                 {/* User Header Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3.5">
                     {u.image ? (
                       <Image
                         src={u.image}
                         alt={u.name || "User"}
-                        width={48}
-                        height={48}
-                        className="rounded-2xl border border-slate-700 object-cover"
+                        width={44}
+                        height={44}
+                        className="rounded-xl border border-slate-200 object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-lg font-black text-white shadow-md">
+                      <div className="w-11 h-11 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-sm font-bold text-indigo-700">
                         {(u.name || u.email || "U").charAt(0).toUpperCase()}
                       </div>
                     )}
 
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-extrabold text-white">
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900">
                           {u.name || "Unnamed User"}
                         </h3>
                         {isSelf && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
-                            You (Current Admin)
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-bold">
+                            Current Session Admin
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
-                        <span>{u.email}</span>
-                        {u.phno && <span>• +91 {u.phno}</span>}
-                        <span className="text-slate-500 font-mono text-[11px]">({u.id})</span>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          {u.email}
+                        </span>
+                        {u.phno && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            +91 {u.phno}
+                          </span>
+                        )}
+                        <span className="text-slate-400 font-mono text-[11px]">({u.id})</span>
                       </div>
                     </div>
                   </div>
@@ -408,11 +440,9 @@ export default function UsersAdminView({
                         setTargetUserForRole(u);
                         setRoleModalError(null);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-semibold transition-all flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                      </svg>
+                      <UserPlus className="w-3.5 h-3.5" />
                       <span>Assign Role</span>
                     </button>
 
@@ -423,11 +453,9 @@ export default function UsersAdminView({
                           setUserToDelete(u);
                           setDeleteModalError(null);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 text-xs font-semibold transition-all flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-3.5 h-3.5" />
                         <span>Delete User</span>
                       </button>
                     )}
@@ -451,16 +479,17 @@ export default function UsersAdminView({
                       {activeAssignments.map((a) => (
                         <div
                           key={a.assignmentId}
-                          className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-start justify-between gap-2"
+                          className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2"
                         >
                           <div className="space-y-0.5 min-w-0">
-                            <span className="text-xs font-bold text-white block truncate">
+                            <span className="text-xs font-bold text-slate-900 block truncate">
                               {a.roleName}
                             </span>
-                            <span className="text-[11px] text-slate-300 block truncate">
-                              Scope: <strong className="text-indigo-300 font-medium">{a.scopeName}</strong>
+                            <span className="text-[11px] text-slate-600 block truncate">
+                              Scope: <strong className="text-indigo-600 font-medium">{a.scopeName}</strong>
                             </span>
-                            <span className="text-[10px] text-slate-500 block">
+                            <span className="text-[10px] text-slate-400 block flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-400" />
                               Active: {formatDate(a.validFrom)} &rarr; {formatDate(a.validUntil)}
                             </span>
                           </div>
@@ -469,7 +498,7 @@ export default function UsersAdminView({
                             type="button"
                             disabled={isPending}
                             onClick={() => handleRevokeRole(u.id, a.assignmentId)}
-                            className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline shrink-0 font-medium py-0.5"
+                            className="text-[11px] text-rose-600 hover:text-rose-800 hover:underline shrink-0 font-medium py-0.5 cursor-pointer"
                             title="Revoke this role assignment"
                           >
                             Revoke
@@ -481,12 +510,12 @@ export default function UsersAdminView({
 
                   {/* Past / Expired roles list */}
                   {expiredAssignments.length > 0 && (
-                    <div className="pt-2 text-[11px] text-slate-500 flex items-center gap-2 flex-wrap">
+                    <div className="pt-2 text-[11px] text-slate-400 flex items-center gap-2 flex-wrap">
                       <span>Past roles:</span>
                       {expiredAssignments.map((a) => (
                         <span
                           key={a.assignmentId}
-                          className="px-2 py-0.5 rounded-lg bg-slate-950/40 border border-slate-850 text-slate-400"
+                          className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500"
                         >
                           {a.roleName} ({a.scopeName})
                         </span>
@@ -502,37 +531,38 @@ export default function UsersAdminView({
 
       {/* ── MODAL: Assign Role & Scope ───────────────────────────────── */}
       {targetUserForRole && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-white">Assign Role to User</h3>
-                <p className="text-xs text-slate-400">
-                  Target: <strong className="text-slate-200">{targetUserForRole.name || targetUserForRole.email}</strong>
+                <h3 className="text-base font-bold text-slate-900">Grant Role & Scope Authority</h3>
+                <p className="text-xs text-slate-500">
+                  Target Account: <strong className="text-slate-800">{targetUserForRole.name || targetUserForRole.email}</strong>
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setTargetUserForRole(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {roleModalError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
-                {roleModalError}
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{roleModalError}</span>
               </div>
             )}
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1.5">Select Role</label>
+                <label className="block text-slate-700 font-semibold mb-1.5">Select Role</label>
                 <select
                   value={selectedRoleId}
                   onChange={(e) => setSelectedRoleId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 >
                   {availableRoles.map((r) => (
                     <option key={r.roleId} value={r.roleId}>
@@ -543,11 +573,11 @@ export default function UsersAdminView({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1.5">Select Scope</label>
+                <label className="block text-slate-700 font-semibold mb-1.5">Select Scope</label>
                 <select
                   value={selectedScopeId}
                   onChange={(e) => setSelectedScopeId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 >
                   {availableScopes.map((s) => (
                     <option key={s.scopeId} value={s.scopeId}>
@@ -558,23 +588,23 @@ export default function UsersAdminView({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1.5">
+                <label className="block text-slate-700 font-semibold mb-1.5">
                   Valid Until (Optional, leave blank for indefinite)
                 </label>
                 <input
                   type="date"
                   value={validUntilDate}
                   onChange={(e) => setValidUntilDate(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setTargetUserForRole(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors"
+                className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -582,7 +612,7 @@ export default function UsersAdminView({
                 type="button"
                 disabled={isPending}
                 onClick={handleAssignRole}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-md shadow-indigo-600/30 flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
                 {isPending ? "Assigning..." : "Confirm Role Assignment"}
               </button>
@@ -593,36 +623,34 @@ export default function UsersAdminView({
 
       {/* ── MODAL: Delete User Confirmation ──────────────────────────── */}
       {userToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-rose-600" />
               </div>
-              <h3 className="text-base font-bold text-white">Delete User Account</h3>
+              <h3 className="text-base font-bold text-slate-900">Delete User Account</h3>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Are you sure you want to permanently delete{" "}
-              <strong className="text-white">{userToDelete.name || userToDelete.email}</strong>?
+              <strong className="text-slate-900">{userToDelete.name || userToDelete.email}</strong>?
             </p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               This action will safely remove their role assignments and associated requests within a database transaction. This cannot be undone.
             </p>
 
             {deleteModalError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {deleteModalError}
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setUserToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors"
+                className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -630,7 +658,7 @@ export default function UsersAdminView({
                 type="button"
                 disabled={isPending}
                 onClick={handleDeleteUser}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shadow-md shadow-rose-600/30"
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
               >
                 {isPending ? "Deleting..." : "Permanently Delete"}
               </button>
@@ -641,4 +669,3 @@ export default function UsersAdminView({
     </div>
   );
 }
-

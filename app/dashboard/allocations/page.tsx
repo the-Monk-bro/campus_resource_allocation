@@ -4,6 +4,7 @@ import pool from "@/lib/db";
 import { UserRow, AllocationStatus } from "@/lib/types/db";
 import { RowDataPacket } from "mysql2/promise";
 import { redirect } from "next/navigation";
+import { CalendarRange, MapPin, Calendar, CheckCircle2 } from "lucide-react";
 
 function formatDateTime(date: Date) {
   return new Intl.DateTimeFormat("en-IN", {
@@ -13,10 +14,26 @@ function formatDateTime(date: Date) {
 }
 
 const statusConfig = {
-  SCHEDULED: { label: "Scheduled", cls: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
-  ONGOING: { label: "Ongoing", cls: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
-  COMPLETED: { label: "Completed", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
-  CANCELLED: { label: "Cancelled", cls: "bg-slate-700/20 text-slate-400 border-slate-700/40" },
+  SCHEDULED: {
+    label: "Scheduled",
+    cls: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    dot: "bg-indigo-500",
+  },
+  ONGOING: {
+    label: "Ongoing Now",
+    cls: "bg-emerald-50 text-emerald-800 border-emerald-300",
+    dot: "bg-emerald-500 animate-pulse",
+  },
+  COMPLETED: {
+    label: "Completed",
+    cls: "bg-slate-100 text-slate-700 border-slate-200",
+    dot: "bg-slate-400",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    cls: "bg-rose-50 text-rose-700 border-rose-200",
+    dot: "bg-rose-500",
+  },
 } as const;
 
 interface AllocationQueryResult extends RowDataPacket {
@@ -80,92 +97,106 @@ export default async function AllocationsPage() {
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-slate-800">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">My Allocations</h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Resources confirmed and allocated to you after full approval.
-        </p>
-      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+            My Allocations
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Confirmed calendar reservations allocated to your account following full approval.
+          </p>
+        </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-3">
-        <div className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-400">
-          <span className="font-bold text-white">{dbAllocations.length}</span>{" "}
-          allocation{dbAllocations.length !== 1 ? "s" : ""}
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 bg-slate-100 border border-slate-200 rounded-md text-xs font-semibold text-slate-700">
+            {dbAllocations.length} Confirmed {dbAllocations.length !== 1 ? "Bookings" : "Booking"}
+          </span>
         </div>
       </div>
 
       {/* Allocation Cards */}
       {dbAllocations.length === 0 ? (
-        <div className="text-center py-20 bg-slate-900/40 border border-slate-800/80 rounded-3xl">
-          <div className="w-14 h-14 rounded-2xl bg-slate-800/80 text-slate-400 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
+        <div className="saas-card p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
+            <CalendarRange className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-white">No allocations yet</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            Once your resource requests are fully approved, they will appear here.
+          <h3 className="text-sm font-bold text-slate-900">No Confirmed Allocations</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Once your resource booking requests complete all approval tiers, they will appear here as confirmed reservations.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {dbAllocations.map((alloc) => {
-            const cfg = statusConfig[alloc.allocationstatus] || statusConfig.SCHEDULED;
+            const cfg =
+              statusConfig[alloc.allocationstatus] || statusConfig.SCHEDULED;
             return (
               <div
                 key={alloc.allocationid}
-                className="p-5 sm:p-6 bg-slate-900/90 border border-slate-800 hover:border-slate-700/80 rounded-3xl transition-all shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="saas-card p-5 sm:p-6 hover:border-slate-300 hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
-                {/* Left */}
+                {/* Left Details */}
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-xs font-bold text-slate-400 font-mono bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                      #{alloc.allocationid}
+                    <span className="font-mono text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      Alloc #{alloc.allocationid}
                     </span>
-                    <h3 className="text-base font-bold text-white">
+                    <h3 className="text-base font-bold text-slate-900">
                       {alloc.resourceName || alloc.resid}
                     </h3>
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                       {alloc.resid}
                     </span>
                     {alloc.resourceLocation && (
-                      <span className="text-xs text-slate-400 flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        </svg>
-                        {alloc.resourceLocation}
+                      <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{alloc.resourceLocation}</span>
                       </span>
                     )}
                   </div>
 
                   {alloc.purpose ? (
-                    <p className="text-sm text-slate-300 italic bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
+                    <div className="bg-slate-50 border border-slate-200/80 p-2.5 rounded-lg text-xs sm:text-sm text-slate-700 italic">
                       &ldquo;{alloc.purpose}&rdquo;
-                    </p>
+                    </div>
                   ) : (
-                    <p className="text-xs text-slate-500 italic">No specific purpose.</p>
+                    <p className="text-xs text-slate-400 italic">
+                      No specific purpose stated.
+                    </p>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
-                    <div className="text-slate-400">
-                      <span className="text-slate-500">From: </span>
-                      <strong className="text-slate-200">{formatDateTime(new Date(alloc.starttime))}</strong>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>
+                        From:{" "}
+                        <strong className="text-slate-900">
+                          {formatDateTime(new Date(alloc.starttime))}
+                        </strong>
+                      </span>
                     </div>
-                    <div className="text-slate-400">
-                      <span className="text-slate-500">To: </span>
-                      <strong className="text-slate-200">{formatDateTime(new Date(alloc.endtime))}</strong>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>
+                        To:{" "}
+                        <strong className="text-slate-900">
+                          {formatDateTime(new Date(alloc.endtime))}
+                        </strong>
+                      </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 sm:col-span-2">
-                      For Request #{alloc.reqid}
+                    <div className="text-[11px] text-slate-400 sm:col-span-2">
+                      Linked to Request #{alloc.reqid}
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Status */}
-                <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-800">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${cfg.cls}`}>
-                    {cfg.label}
+                {/* Right: Status Pill */}
+                <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cfg.cls}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                    <span>{cfg.label}</span>
                   </span>
                 </div>
               </div>

@@ -11,6 +11,22 @@ import {
   RoleFormData,
   ScopeFormData,
 } from "@/actions/adminActions";
+import {
+  ShieldCheck,
+  Layers,
+  Users,
+  GitCommit,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  X,
+  AlertCircle,
+  Tag,
+  Shield,
+  CheckCircle2,
+  Inbox,
+} from "lucide-react";
 
 export interface AdminRoleItem {
   roleId: string;
@@ -312,38 +328,50 @@ export default function RolesScopesAdminView({
       {/* ── Summary Counters & Action Buttons ────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">
-              Total Roles
-            </span>
-            <span className="text-2xl font-black text-white mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-slate-400 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Total Roles
+              </span>
+              <ShieldCheck className="w-4 h-4 text-slate-400" />
+            </div>
+            <span className="text-2xl font-black text-slate-900 mt-1 block">
               {roles.length}
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-purple-400 font-medium uppercase tracking-wider block">
-              Total Scopes
-            </span>
-            <span className="text-2xl font-black text-purple-300 mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-purple-600 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                Total Scopes
+              </span>
+              <Layers className="w-4 h-4 text-purple-600" />
+            </div>
+            <span className="text-2xl font-black text-purple-700 mt-1 block">
               {scopes.length}
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-indigo-400 font-medium uppercase tracking-wider block">
-              Active User Roles
-            </span>
-            <span className="text-2xl font-black text-indigo-300 mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-indigo-600 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+                Active Assignments
+              </span>
+              <Users className="w-4 h-4 text-indigo-600" />
+            </div>
+            <span className="text-2xl font-black text-indigo-700 mt-1 block">
               {roles.reduce((acc, r) => acc + r.assignmentCount, 0)}
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80">
-            <span className="text-xs text-emerald-400 font-medium uppercase tracking-wider block">
-              Approval Linkages
-            </span>
-            <span className="text-2xl font-black text-emerald-300 mt-1 block">
+          <div className="saas-card p-4">
+            <div className="flex items-center justify-between text-emerald-600 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+                Pipeline Stages
+              </span>
+              <GitCommit className="w-4 h-4 text-emerald-600" />
+            </div>
+            <span className="text-2xl font-black text-emerald-700 mt-1 block">
               {roles.reduce((acc, r) => acc + r.hierarchyCount, 0)}
             </span>
           </div>
@@ -353,44 +381,40 @@ export default function RolesScopesAdminView({
           <button
             type="button"
             onClick={handleOpenCreateRole}
-            className="px-4 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs shadow-md shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer flex-1 sm:flex-initial"
+            className="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>+ Add Role</span>
+            <Plus className="w-4 h-4" />
+            <span>Create Role</span>
           </button>
 
           <button
             type="button"
             onClick={handleOpenCreateScope}
-            className="px-4 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-md shadow-purple-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer flex-1 sm:flex-initial"
+            className="px-3.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>+ Add Scope</span>
+            <Plus className="w-4 h-4" />
+            <span>Create Scope</span>
           </button>
         </div>
       </div>
 
       {/* ── Tab Switcher & Search Toolbar ────────────────────────────── */}
-      <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-4">
+      <div className="saas-card p-4 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Main Segmented Toggle */}
-          <div className="flex items-center p-1 bg-slate-950/80 rounded-2xl border border-slate-800 w-fit">
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80 w-fit">
             <button
               type="button"
               onClick={() => setActiveTab("ROLES")}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === "ROLES"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>System Roles</span>
               <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
-                activeTab === "ROLES" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
+                activeTab === "ROLES" ? "bg-indigo-50 text-indigo-700 font-bold" : "bg-slate-200 text-slate-600"
               }`}>
                 {roles.length}
               </span>
@@ -399,15 +423,15 @@ export default function RolesScopesAdminView({
             <button
               type="button"
               onClick={() => setActiveTab("SCOPES")}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === "SCOPES"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>Institutional Scopes</span>
               <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
-                activeTab === "SCOPES" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
+                activeTab === "SCOPES" ? "bg-purple-50 text-purple-700 font-bold" : "bg-slate-200 text-slate-600"
               }`}>
                 {scopes.length}
               </span>
@@ -417,15 +441,7 @@ export default function RolesScopesAdminView({
           {/* Search & Sort */}
           <div className="flex items-center gap-2.5 flex-1 max-w-md">
             <div className="relative flex-1">
-              <svg
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder={
@@ -435,14 +451,14 @@ export default function RolesScopesAdminView({
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-600 transition-colors"
               />
             </div>
 
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-indigo-500 shrink-0"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-600 shrink-0"
             >
               <option value="name">Sort by Name</option>
               <option value="id">Sort by ID</option>
@@ -453,15 +469,15 @@ export default function RolesScopesAdminView({
 
         {/* Scope Type Filter (shown only when Scopes tab is active) */}
         {activeTab === "SCOPES" && (
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 overflow-x-auto pb-1">
             <span className="text-[11px] font-semibold text-slate-400 shrink-0">Type Filter:</span>
             <button
               type="button"
               onClick={() => setScopeTypeFilter("ALL")}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 scopeTypeFilter === "ALL"
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
               }`}
             >
               All Types ({scopes.length})
@@ -471,10 +487,10 @@ export default function RolesScopesAdminView({
                 key={t}
                 type="button"
                 onClick={() => setScopeTypeFilter(t)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   scopeTypeFilter === t
-                    ? "bg-purple-600 text-white shadow-sm"
-                    : "bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/60"
                 }`}
               >
                 {t}
@@ -488,8 +504,8 @@ export default function RolesScopesAdminView({
       {activeTab === "ROLES" && (
         <div>
           {filteredRoles.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-              <p className="text-sm font-semibold text-slate-300">No matching roles found</p>
+            <div className="p-12 text-center saas-card space-y-3">
+              <p className="text-sm font-semibold text-slate-800">No matching roles found</p>
               <p className="text-xs text-slate-500">Try adjusting your search query.</p>
             </div>
           ) : (
@@ -501,46 +517,46 @@ export default function RolesScopesAdminView({
                 return (
                   <div
                     key={role.roleId}
-                    className="p-5 rounded-3xl bg-slate-900/85 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-4 shadow-xl"
+                    className="p-5 saas-card hover:border-slate-300 transition-all flex flex-col justify-between space-y-4 shadow-xs"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400">
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
                           {role.roleId}
                         </span>
 
                         {isSystemProtected ? (
-                          <span className="px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-bold">
                             System Core
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-semibold">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-semibold">
                             Role
                           </span>
                         )}
                       </div>
 
                       <div>
-                        <h3 className="text-base font-bold text-white tracking-tight">
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                           {role.roleName}
                         </h3>
                       </div>
 
                       {/* Usage Metrics */}
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-800/60">
-                        <div className="p-2 rounded-xl bg-slate-950/50 border border-slate-800/80">
-                          <span className="text-slate-500 block text-[10px] uppercase font-semibold">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-100">
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">
                             Assigned Users
                           </span>
-                          <span className="text-sm font-black text-slate-200 mt-0.5 block">
+                          <span className="text-sm font-black text-slate-800 mt-0.5 block">
                             {role.assignmentCount}
                           </span>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-950/50 border border-slate-800/80">
-                          <span className="text-slate-500 block text-[10px] uppercase font-semibold">
-                            Approval Chains
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+                            Pipeline Stages
                           </span>
-                          <span className="text-sm font-black text-purple-300 mt-0.5 block">
+                          <span className="text-sm font-black text-purple-700 mt-0.5 block">
                             {role.hierarchyCount}
                           </span>
                         </div>
@@ -548,15 +564,13 @@ export default function RolesScopesAdminView({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-slate-800/80">
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                       <button
                         type="button"
                         onClick={() => handleOpenEditRole(role)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Edit className="w-3.5 h-3.5 text-slate-500" />
                         <span>Edit</span>
                       </button>
 
@@ -568,15 +582,13 @@ export default function RolesScopesAdminView({
                           setDeleteRoleError(null);
                         }}
                         title={isSystemProtected ? "Primary system Admin role cannot be deleted" : "Delete role"}
-                        className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                        className={`py-1.5 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                           isSystemProtected
-                            ? "opacity-30 cursor-not-allowed border-slate-800 text-slate-600"
-                            : "bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border-rose-500/20 cursor-pointer"
+                            ? "opacity-30 cursor-not-allowed border-slate-200 text-slate-400"
+                            : "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 cursor-pointer"
                         }`}
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-3.5 h-3.5" />
                         <span>Delete</span>
                       </button>
                     </div>
@@ -592,8 +604,8 @@ export default function RolesScopesAdminView({
       {activeTab === "SCOPES" && (
         <div>
           {filteredScopes.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-              <p className="text-sm font-semibold text-slate-300">No matching scopes found</p>
+            <div className="p-12 text-center saas-card space-y-3">
+              <p className="text-sm font-semibold text-slate-800">No matching scopes found</p>
               <p className="text-xs text-slate-500">Try adjusting your filters or search query.</p>
             </div>
           ) : (
@@ -605,47 +617,47 @@ export default function RolesScopesAdminView({
                 return (
                   <div
                     key={scope.scopeId}
-                    className="p-5 rounded-3xl bg-slate-900/85 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-4 shadow-xl"
+                    className="p-5 saas-card hover:border-slate-300 transition-all flex flex-col justify-between space-y-4 shadow-xs"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-purple-400">
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-purple-700">
                           {scope.scopeId}
                         </span>
 
                         <div className="flex items-center gap-1.5">
                           {isSystemProtected && (
-                            <span className="px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-bold">
                               Core Scope
                             </span>
                           )}
-                          <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-semibold uppercase">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-semibold uppercase">
                             {scope.scopeType}
                           </span>
                         </div>
                       </div>
 
                       <div>
-                        <h3 className="text-base font-bold text-white tracking-tight">
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                           {scope.scopeName}
                         </h3>
                       </div>
 
                       {/* Usage Metrics */}
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-800/60">
-                        <div className="p-2 rounded-xl bg-slate-950/50 border border-slate-800/80">
-                          <span className="text-slate-500 block text-[10px] uppercase font-semibold">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-100">
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">
                             Assigned Users
                           </span>
-                          <span className="text-sm font-black text-slate-200 mt-0.5 block">
+                          <span className="text-sm font-black text-slate-800 mt-0.5 block">
                             {scope.assignmentCount}
                           </span>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-950/50 border border-slate-800/80">
-                          <span className="text-slate-500 block text-[10px] uppercase font-semibold">
-                            Approval Chains
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+                            Pipeline Stages
                           </span>
-                          <span className="text-sm font-black text-purple-300 mt-0.5 block">
+                          <span className="text-sm font-black text-purple-700 mt-0.5 block">
                             {scope.hierarchyCount}
                           </span>
                         </div>
@@ -653,15 +665,13 @@ export default function RolesScopesAdminView({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-slate-800/80">
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                       <button
                         type="button"
                         onClick={() => handleOpenEditScope(scope)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Edit className="w-3.5 h-3.5 text-slate-500" />
                         <span>Edit</span>
                       </button>
 
@@ -673,15 +683,13 @@ export default function RolesScopesAdminView({
                           setDeleteScopeError(null);
                         }}
                         title={isSystemProtected ? "Primary CRAS scope cannot be deleted" : "Delete scope"}
-                        className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                        className={`py-1.5 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                           isSystemProtected
-                            ? "opacity-30 cursor-not-allowed border-slate-800 text-slate-600"
-                            : "bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border-rose-500/20 cursor-pointer"
+                            ? "opacity-30 cursor-not-allowed border-slate-200 text-slate-400"
+                            : "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 cursor-pointer"
                         }`}
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-3.5 h-3.5" />
                         <span>Delete</span>
                       </button>
                     </div>
@@ -695,32 +703,32 @@ export default function RolesScopesAdminView({
 
       {/* ── MODAL: Create Role ───────────────────────────────────────── */}
       {isCreateRoleOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Create System Role</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Create System Role</h3>
               <button
                 type="button"
                 onClick={() => setIsCreateRoleOpen(false)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {createRoleError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {createRoleError}
               </div>
             )}
 
             <form onSubmit={handleCreateRoleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Role Identifier <span className="text-rose-400">*</span>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Role Identifier <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-slate-500 text-xs select-none">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-slate-400 text-xs select-none">
                     ROLE-
                   </span>
                   <input
@@ -731,15 +739,15 @@ export default function RolesScopesAdminView({
                     onChange={(e) =>
                       setNewRole({ ...newRole, roleId: `ROLE-${e.target.value.toUpperCase()}` })
                     }
-                    className="w-full pl-16 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs font-mono uppercase"
+                    className="w-full pl-16 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs font-mono uppercase"
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1">Unique machine-readable key (auto-prefixed with ROLE-)</p>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Role Display Name <span className="text-rose-400">*</span>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Role Display Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -747,22 +755,22 @@ export default function RolesScopesAdminView({
                   placeholder="e.g. Associate Dean of Academic Affairs"
                   value={newRole.roleName}
                   onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsCreateRoleOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-md shadow-indigo-600/30 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                 >
                   {isPending ? "Creating..." : "Save Role"}
                 </button>
@@ -774,52 +782,52 @@ export default function RolesScopesAdminView({
 
       {/* ── MODAL: Edit Role ─────────────────────────────────────────── */}
       {roleToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-base font-bold text-white">Edit Role Details</h3>
-                <span className="text-xs font-mono text-indigo-400">{editRoleForm.roleId}</span>
+                <h3 className="text-base font-bold text-slate-900">Edit Role Details</h3>
+                <span className="text-xs font-mono text-indigo-600">{editRoleForm.roleId}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setRoleToEdit(null)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {editRoleError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {editRoleError}
               </div>
             )}
 
             <form onSubmit={handleEditRoleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Role Display Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Role Display Name</label>
                 <input
                   type="text"
                   required
                   value={editRoleForm.roleName}
                   onChange={(e) => setEditRoleForm({ ...editRoleForm, roleName: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setRoleToEdit(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-md shadow-indigo-600/30 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                 >
                   {isPending ? "Saving..." : "Update Role"}
                 </button>
@@ -831,24 +839,22 @@ export default function RolesScopesAdminView({
 
       {/* ── MODAL: Delete Role ───────────────────────────────────────── */}
       {roleToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-rose-600" />
               </div>
-              <h3 className="text-base font-bold text-white">Delete Role</h3>
+              <h3 className="text-base font-bold text-slate-900">Delete Role</h3>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Are you sure you want to delete role{" "}
-              <strong className="text-white">{roleToDelete.roleName} ({roleToDelete.roleId})</strong>?
+              <strong className="text-slate-900">{roleToDelete.roleName} ({roleToDelete.roleId})</strong>?
             </p>
 
             {(roleToDelete.assignmentCount > 0 || roleToDelete.hierarchyCount > 0) && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs space-y-1">
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs space-y-1">
                 <p className="font-bold">⚠️ Warning: Role in Active Use</p>
                 <p>
                   This role is currently assigned to <strong>{roleToDelete.assignmentCount}</strong> user(s) and referenced in <strong>{roleToDelete.hierarchyCount}</strong> approval chain(s). You must revoke these assignments and reassign approval chains before deletion can proceed.
@@ -857,16 +863,16 @@ export default function RolesScopesAdminView({
             )}
 
             {deleteRoleError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {deleteRoleError}
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setRoleToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -874,7 +880,7 @@ export default function RolesScopesAdminView({
                 type="button"
                 disabled={isPending || roleToDelete.assignmentCount > 0 || roleToDelete.hierarchyCount > 0}
                 onClick={handleDeleteRoleSubmit}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors shadow-md shadow-rose-600/30 cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
               >
                 {isPending ? "Deleting..." : "Permanently Delete"}
               </button>
@@ -885,32 +891,32 @@ export default function RolesScopesAdminView({
 
       {/* ── MODAL: Create Scope ──────────────────────────────────────── */}
       {isCreateScopeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Create Institutional Scope</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Create Institutional Scope</h3>
               <button
                 type="button"
                 onClick={() => setIsCreateScopeOpen(false)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {createScopeError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {createScopeError}
               </div>
             )}
 
             <form onSubmit={handleCreateScopeSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Scope Identifier <span className="text-rose-400">*</span>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Scope Identifier <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-slate-500 text-xs select-none">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-slate-400 text-xs select-none">
                     SCOPE-
                   </span>
                   <input
@@ -921,15 +927,15 @@ export default function RolesScopesAdminView({
                     onChange={(e) =>
                       setNewScope({ ...newScope, scopeId: `SCOPE-${e.target.value.toUpperCase()}` })
                     }
-                    className="w-full pl-18 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs font-mono uppercase"
+                    className="w-full pl-18 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs font-mono uppercase"
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1">Unique machine-readable key (auto-prefixed with SCOPE-)</p>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Scope Display Name <span className="text-rose-400">*</span>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Scope Display Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -937,13 +943,13 @@ export default function RolesScopesAdminView({
                   placeholder="e.g. Artificial Intelligence Research Center"
                   value={newScope.scopeName}
                   onChange={(e) => setNewScope({ ...newScope, scopeName: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Scope Category / Type <span className="text-rose-400">*</span>
+                <label className="block text-slate-700 font-semibold mb-1">
+                  Scope Category / Type <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -952,7 +958,7 @@ export default function RolesScopesAdminView({
                   placeholder="e.g. DEPARTMENT, CLUB, INSTITUTE, COURSE"
                   value={newScope.scopeType}
                   onChange={(e) => setNewScope({ ...newScope, scopeType: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs uppercase"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs uppercase"
                 />
                 <datalist id="scope-type-options">
                   {COMMON_SCOPE_TYPES.map((t) => (
@@ -961,18 +967,18 @@ export default function RolesScopesAdminView({
                 </datalist>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsCreateScopeOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-colors shadow-md shadow-purple-600/30 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                 >
                   {isPending ? "Creating..." : "Save Scope"}
                 </button>
@@ -984,49 +990,49 @@ export default function RolesScopesAdminView({
 
       {/* ── MODAL: Edit Scope ─────────────────────────────────────────── */}
       {scopeToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-base font-bold text-white">Edit Scope Details</h3>
-                <span className="text-xs font-mono text-purple-400">{editScopeForm.scopeId}</span>
+                <h3 className="text-base font-bold text-slate-900">Edit Scope Details</h3>
+                <span className="text-xs font-mono text-purple-600">{editScopeForm.scopeId}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setScopeToEdit(null)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {editScopeError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {editScopeError}
               </div>
             )}
 
             <form onSubmit={handleEditScopeSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Scope Display Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Scope Display Name</label>
                 <input
                   type="text"
                   required
                   value={editScopeForm.scopeName}
                   onChange={(e) => setEditScopeForm({ ...editScopeForm, scopeName: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Scope Type / Category</label>
+                <label className="block text-slate-700 font-semibold mb-1">Scope Type / Category</label>
                 <input
                   type="text"
                   required
                   list="scope-edit-type-options"
                   value={editScopeForm.scopeType}
                   onChange={(e) => setEditScopeForm({ ...editScopeForm, scopeType: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 text-xs uppercase"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600 text-xs uppercase"
                 />
                 <datalist id="scope-edit-type-options">
                   {COMMON_SCOPE_TYPES.map((t) => (
@@ -1035,18 +1041,18 @@ export default function RolesScopesAdminView({
                 </datalist>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setScopeToEdit(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-colors shadow-md shadow-purple-600/30 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                 >
                   {isPending ? "Saving..." : "Update Scope"}
                 </button>
@@ -1058,24 +1064,22 @@ export default function RolesScopesAdminView({
 
       {/* ── MODAL: Delete Scope ───────────────────────────────────────── */}
       {scopeToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-rose-600" />
               </div>
-              <h3 className="text-base font-bold text-white">Delete Scope</h3>
+              <h3 className="text-base font-bold text-slate-900">Delete Scope</h3>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Are you sure you want to delete scope{" "}
-              <strong className="text-white">{scopeToDelete.scopeName} ({scopeToDelete.scopeId})</strong>?
+              <strong className="text-slate-900">{scopeToDelete.scopeName} ({scopeToDelete.scopeId})</strong>?
             </p>
 
             {(scopeToDelete.assignmentCount > 0 || scopeToDelete.hierarchyCount > 0) && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs space-y-1">
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs space-y-1">
                 <p className="font-bold">⚠️ Warning: Scope in Active Use</p>
                 <p>
                   This scope is currently assigned to <strong>{scopeToDelete.assignmentCount}</strong> user role(s) and referenced in <strong>{scopeToDelete.hierarchyCount}</strong> resource approval chain(s). You must revoke these assignments and reassign approval chains before deletion can proceed.
@@ -1084,16 +1088,16 @@ export default function RolesScopesAdminView({
             )}
 
             {deleteScopeError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
                 {deleteScopeError}
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setScopeToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-slate-100 text-xs text-slate-700 hover:bg-slate-200 font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1101,7 +1105,7 @@ export default function RolesScopesAdminView({
                 type="button"
                 disabled={isPending || scopeToDelete.assignmentCount > 0 || scopeToDelete.hierarchyCount > 0}
                 onClick={handleDeleteScopeSubmit}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors shadow-md shadow-rose-600/30 cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer"
               >
                 {isPending ? "Deleting..." : "Permanently Delete"}
               </button>
@@ -1112,4 +1116,3 @@ export default function RolesScopesAdminView({
     </div>
   );
 }
-

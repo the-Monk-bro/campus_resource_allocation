@@ -128,12 +128,17 @@ export default async function AdminResourcesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      <div className="pb-4 border-b border-slate-800">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+      <div className="pb-5 border-b border-slate-200">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1">
+            Institutional Facilities
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           Campus Facilities & Resources
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Create new facilities, configure multi-stage approval hierarchy pipelines, update capacities and statuses, and manage institutional resources.
+        <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-3xl">
+          Provision new campus spaces, configure multi-tier approval hierarchies, update capacities, and manage operational availability.
         </p>
       </div>
 

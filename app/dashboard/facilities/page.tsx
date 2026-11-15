@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { RowDataPacket } from "mysql2/promise";
 import Link from "next/link";
 import FacilitiesDirectory, { FacilityItem } from "@/components/facilities/FacilitiesDirectory";
+import { CalendarPlus } from "lucide-react";
 
 interface FacilityQueryResult extends RowDataPacket {
   id: string;
@@ -53,24 +54,22 @@ export default async function FacilitiesPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            Campus Facilities Directory
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+            Facilities Directory
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Explore, check capacities, and reserve lecture halls, AI research laboratories, auditoriums, and seminar rooms.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Explore specifications, capacities, and active availability for campus venues.
           </p>
         </div>
 
         <Link
           href="/dashboard/requests"
-          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors shadow-lg shadow-indigo-600/30 flex items-center gap-2 self-start sm:self-auto shrink-0"
+          className="px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs transition-colors shadow-xs flex items-center gap-1.5 self-start sm:self-auto shrink-0"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Make Request</span>
+          <CalendarPlus className="w-4 h-4" />
+          <span>New Reservation</span>
         </Link>
       </div>
 
@@ -79,4 +78,3 @@ export default async function FacilitiesPage() {
     </div>
   );
 }
-
