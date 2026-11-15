@@ -2,6 +2,7 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import mysql from "mysql2/promise";
+import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
 
@@ -163,18 +164,52 @@ async function main() {
       console.log("✅ Analytical views applied successfully!");
     }
 
-    console.log("\n🎉 Database reset completed (Zero Seed Data)!");
+    // ── Seed ONLY the Primary CRAS Administrator ───────────────────────────
+    console.log("👑 Seeding root CRAS administrator...");
+    const adminHashedPassword = await bcrypt.hash("password123", 10);
+
+    // 1. Admin User
+    await connection.execute(
+      `INSERT INTO users (id, name, email, password, phno) VALUES (?, ?, ?, ?, ?)`,
+      [
+        "usr-cras-admin",
+        "CRAS Administrator",
+        "admin.cras@campus.edu",
+        adminHashedPassword,
+        "9999888877",
+      ]
+    );
+
+    // 2. Admin Role
+    await connection.execute(
+      `INSERT INTO roles (RoleId, RoleName) VALUES (?, ?)`,
+      ["ROLE-ADMIN", "Admin"]
+    );
+
+    // 3. CRAS Institute Scope
+    await connection.execute(
+      `INSERT INTO scopes (ScopeId, ScopeName, ScopeType) VALUES (?, ?, ?)`,
+      ["SCOPE-CRAS", "CRAS", "INSTITUTE"]
+    );
+
+    // 4. Admin Role Assignment (Active indefinitely)
+    await connection.execute(
+      `INSERT INTO role_assignments (AssignmentId, UserId, RoleId, ScopeId, ValidFrom, ValidUntil)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [1, "usr-cras-admin", "ROLE-ADMIN", "SCOPE-CRAS", "2025-01-01 00:00:00", null]
+    );
+    console.log("✅ Seeded CRAS Administrator (admin.cras@campus.edu).");
+
+    console.log("\n🎉 Database minimal reset completed!");
     console.log("-------------------------------------------------------");
-    console.log("Initialized objects:");
-    console.log("  • All base tables created empty from schema.sql");
-    console.log("  • Workflow triggers applied (trg_after_request_insert, trg_after_approval_step_update)");
-    console.log("  • Integrity trigger applied (trg_prevent_allocation_overlap)");
-    console.log("  • Stored procedures applied (sp_act_on_approval_step, sp_create_request, sp_cancel_request, sp_update_allocation_statuses)");
-    console.log("  • Stored functions applied (fn_has_allocation_conflict, fn_check_assignment_validity)");
-    console.log("  • Scheduled event applied (evt_update_allocation_statuses)");
-    console.log("  • Analytical & operational SQL views applied from views.sql");
+    console.log("Initialized Objects & Data:");
+    console.log("  • All schema tables, triggers, procedures, functions, and views");
+    console.log("  • Seeded ONLY 1 root administrator:");
+    console.log("      Email:    admin.cras@campus.edu");
+    console.log("      Password: password123");
+    console.log("      Role:     Admin (Scope: CRAS)");
     console.log("");
-    console.log("No data was seeded (clean empty slate for production/fresh setup).");
+    console.log("  • NO other users, facilities, roles, or mock bookings seeded.");
     console.log("-------------------------------------------------------");
   } catch (error) {
     console.error("❌ Error during database reset:", error);
