@@ -128,7 +128,7 @@ async function main() {
     }
 
     // Apply integrity rules: overlap trigger, stored functions, cleanup procedure and event
-    const integrityPath = path.join(process.cwd(), "sql", "]integrity.sql");
+    const integrityPath = path.join(process.cwd(), "sql", "integrity.sql");
     if (fs.existsSync(integrityPath)) {
       console.log("Applying integrity rules from sql/integrity.sql...");
       const integritySql = fs.readFileSync(integrityPath, "utf-8");
@@ -142,6 +142,8 @@ async function main() {
       } catch {
         console.warn("Could not turn on the event scheduler. Run this yourself: SET GLOBAL event_scheduler = ON;");
       }
+    }
+
     const requestProceduresPath = path.join(process.cwd(), "sql", "procedures_request.sql");
     if (fs.existsSync(requestProceduresPath)) {
       console.log("📦 Applying request procedures from sql/procedures_request.sql...");

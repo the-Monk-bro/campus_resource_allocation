@@ -133,7 +133,7 @@ proc: BEGIN
        AND NOT EXISTS (
             SELECT 1 FROM role_assignments ra
              WHERE ra.RoleId  = h.RoleId
-               AND ra.ScopeId = h.ScopeId
+               AND (h.ScopeId IS NULL OR ra.ScopeId = h.ScopeId)
                AND ra.ValidFrom <= NOW()
                AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
        );

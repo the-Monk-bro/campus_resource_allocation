@@ -8,7 +8,6 @@ import type { PoolConnection } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { checkResourceAvailabilityAction } from "@/actions/allocationAction";
 
 export interface CreateRequestInput {
   resid: string;
@@ -164,49 +163,6 @@ export async function createRequestAction(input: CreateRequestInput) {
     }
     if (endDate <= startDate) {
       return { success: false, error: "End time must be strictly after start time." };
-    }
-
-    // Verify user owns the specified assignment and it is currently active
-    const [assignRows] = await pool.execute<RowDataPacket[]>(
-      `SELECT ra.AssignmentId, r.RoleName, s.ScopeName
-       FROM role_assignments ra
-       INNER JOIN roles r ON ra.RoleId = r.RoleId
-       INNER JOIN scopes s ON ra.ScopeId = s.ScopeId
-       WHERE ra.AssignmentId = ? AND ra.UserId = ?
-         AND ra.ValidFrom <= NOW()
-         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
-       LIMIT 1`,
-      [assignmentId, user.id]
-    );
-
-    if (!assignRows || assignRows.length === 0) {
-      return {
-        success: false,
-        error: "The selected role assignment is invalid, expired, or does not belong to you.",
-      };
-    }
-
-    // Verify resource exists
-    const [resRows] = await pool.execute<ResourceRow[]>(
-      `SELECT id, name, status FROM resources WHERE id = ? LIMIT 1`,
-      [resid.trim()]
-    );
-
-    const existingResource = resRows[0];
-    if (!existingResource) {
-      return { success: false, error: `Selected resource '${resid}' was not found in the database.` };
-    }
-
-    // Check the resource is free for this time slot (MySQL function fn_check_resource_availability)
-    const availability = await checkResourceAvailabilityAction(existingResource.id, startDate, endDate);
-    if (!availability.success) {
-      return { success: false, error: availability.error };
-    }
-    if (!availability.available) {
-      return {
-        success: false,
-        error: "This resource is already booked for the selected time. Please choose a different time slot.",
-      };
     }
 
     // Validate purpose length (max 100 chars per schema)

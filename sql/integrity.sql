@@ -65,7 +65,7 @@ BEGIN
   SELECT COUNT(*) INTO v_count
   FROM approval_hierarchies h
   JOIN role_assignments ra
-    ON ra.RoleId = h.RoleId AND ra.ScopeId = h.ScopeId
+    ON ra.RoleId = h.RoleId AND (h.ScopeId IS NULL OR ra.ScopeId = h.ScopeId)
   WHERE h.hid = p_hid
     AND ra.UserId = p_user_id
     AND ra.ValidFrom <= NOW()

@@ -144,6 +144,16 @@ async function main() {
       }
     }
 
+    const requestProceduresPath = path.join(process.cwd(), "sql", "procedures_request.sql");
+    if (fs.existsSync(requestProceduresPath)) {
+      console.log("📦 Applying request procedures from sql/procedures_request.sql...");
+      const requestProceduresSql = fs.readFileSync(requestProceduresPath, "utf-8");
+      for (const stmt of splitSqlStatements(requestProceduresSql)) {
+        await connection.query(stmt);
+      }
+      console.log("✅ Request procedures applied successfully!");
+    }
+
     console.log("🌱 Starting minimal seed...");
     const defaultHashedPassword = await bcrypt.hash("password123", 10);
 
