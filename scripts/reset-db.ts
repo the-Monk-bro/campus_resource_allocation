@@ -154,6 +154,16 @@ async function main() {
       console.log("✅ Request procedures applied successfully!");
     }
 
+    const viewsPath = path.join(process.cwd(), "sql", "views.sql");
+    if (fs.existsSync(viewsPath)) {
+      console.log("👁️  Applying analytical and operational views from sql/views.sql...");
+      const viewsSql = fs.readFileSync(viewsPath, "utf-8");
+      for (const stmt of splitSqlStatements(viewsSql)) {
+        await connection.query(stmt);
+      }
+      console.log("✅ Analytical views applied successfully!");
+    }
+
     console.log("🌱 Starting seed data insertion...");
     const defaultHashedPassword = await bcrypt.hash("password123", 10);
 

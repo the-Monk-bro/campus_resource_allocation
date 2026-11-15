@@ -95,6 +95,22 @@ again after a restart:
 SET GLOBAL event_scheduler = ON;
 ```
 
+---
+## 3c. Load Analytical and Operational Views (Person 4)
+
+Load `sql/views.sql` to create standard relational views for reporting, workflow pipelines, and audit:
+```bash
+mysql -u root -p campus_resource_allocation < sql/views.sql
+```
+
+The 6 views defined in `sql/views.sql` include:
+1. `vw_active_role_assignments`: Pre-filters currently valid temporal role assignments.
+2. `vw_resource_utilization`: Calculates request counts, confirmed allocations, and total booked hours per facility.
+3. `vw_request_pipeline`: Pre-joins booking requests with user profiles, assigned roles, scopes, and allocation status.
+4. `vw_approval_pipeline_audit`: Granular step-by-step progress tracking and turnaround time audit for each approval tier.
+5. `vw_pending_approvals`: Real-time operational worklist of pending approval steps and wait times.
+6. `vw_confirmed_allocations`: Confirmed allocations with dynamic temporal flags (`IsCurrentlyOngoing`, `IsUpcoming`, `HasEnded`).
+
 ## 4. Configure `.env.local`
 
 Ensure your `.env.local` file contains the MySQL connection settings:
