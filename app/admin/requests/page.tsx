@@ -42,55 +42,46 @@ interface DbStepRow extends RowDataPacket {
 export default async function AdminRequestsPage() {
   await requireAdmin();
 
-  // 1. Fetch all requests
+  // 1. Fetch all requests using analytical pipeline view
   const [requestRows] = await pool.execute<DbRequestRow[]>(`
     SELECT
-      r.reqid,
-      r.purpose,
-      r.reqtime,
-      r.starttime,
-      r.endtime,
-      r.reqstatus,
-      u.id AS requesterId,
-      u.name AS requesterName,
-      u.email AS requesterEmail,
-      res.id AS resourceId,
-      res.name AS resourceName,
-      res.type AS resourceType,
-      res.location AS resourceLocation,
-      role.RoleName AS requesterRoleName,
-      scope.ScopeName AS requesterScopeName
-    FROM requests r
-    INNER JOIN users u ON r.requesterid = u.id
-    INNER JOIN resources res ON r.resid = res.id
-    LEFT JOIN role_assignments ra ON r.RequesterAssignmentId = ra.AssignmentId
-    LEFT JOIN roles role ON ra.RoleId = role.RoleId
-    LEFT JOIN scopes scope ON ra.ScopeId = scope.ScopeId
-    ORDER BY r.reqtime DESC
+      RequestId AS reqid,
+      Purpose AS purpose,
+      RequestTime AS reqtime,
+      StartTime AS starttime,
+      EndTime AS endtime,
+      RequestStatus AS reqstatus,
+      RequesterId AS requesterId,
+      RequesterName AS requesterName,
+      RequesterEmail AS requesterEmail,
+      ResourceId AS resourceId,
+      ResourceName AS resourceName,
+      ResourceType AS resourceType,
+      ResourceLocation AS resourceLocation,
+      RequesterRoleName AS requesterRoleName,
+      RequesterScopeName AS requesterScopeName
+    FROM vw_request_pipeline
+    ORDER BY RequestTime DESC
   `);
 
-  // 2. Fetch all approval steps with reviewer names
+  // 2. Fetch all approval steps with reviewer names using audit view
   const [stepRows] = await pool.execute<DbStepRow[]>(`
     SELECT
-      ast.hid,
-      ast.reqid,
-      ah.hlevel,
-      r.RoleId AS roleId,
-      r.RoleName AS roleName,
-      s.ScopeId AS scopeId,
-      s.ScopeName AS scopeName,
-      ast.ActionByUserId AS actionByUserId,
-      uAction.name AS actionByName,
-      ast.approvalstatus,
-      ast.issuetime,
-      ast.actiontime,
-      ast.shortcomment
-    FROM approval_steps ast
-    INNER JOIN approval_hierarchies ah ON ast.hid = ah.hid
-    INNER JOIN roles r ON ah.RoleId = r.RoleId
-    LEFT JOIN scopes s ON ah.ScopeId = s.ScopeId
-    LEFT JOIN users uAction ON ast.ActionByUserId = uAction.id
-    ORDER BY ast.reqid DESC, ah.hlevel ASC
+      HierarchyId AS hid,
+      RequestId AS reqid,
+      HierarchyLevel AS hlevel,
+      RequiredRoleId AS roleId,
+      RequiredRoleName AS roleName,
+      RequiredScopeId AS scopeId,
+      RequiredScopeName AS scopeName,
+      ActionByUserId AS actionByUserId,
+      ActionByUserName AS actionByName,
+      StepStatus AS approvalstatus,
+      StepIssuedTime AS issuetime,
+      StepActionTime AS actiontime,
+      ApproverComment AS shortcomment
+    FROM vw_approval_pipeline_audit
+    ORDER BY RequestId DESC, HierarchyLevel ASC
   `);
 
   // Map steps by reqid

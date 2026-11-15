@@ -19,16 +19,11 @@ export async function checkIsAdmin(): Promise<AdminUserCheck> {
     }
 
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT u.id, u.name, u.email
-       FROM role_assignments ra
-       INNER JOIN users u ON ra.UserId = u.id
-       INNER JOIN roles r ON ra.RoleId = r.RoleId
-       INNER JOIN scopes s ON ra.ScopeId = s.ScopeId
-       WHERE u.email = ?
-         AND r.RoleName = 'Admin'
-         AND s.ScopeName = 'CRAS'
-         AND ra.ValidFrom <= NOW()
-         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
+      `SELECT UserId AS id, UserName AS name, UserEmail AS email
+       FROM vw_active_role_assignments
+       WHERE UserEmail = ?
+         AND RoleName = 'Admin'
+         AND ScopeName = 'CRAS'
        LIMIT 1`,
       [session.user.email]
     );

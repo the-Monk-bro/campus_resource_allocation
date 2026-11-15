@@ -74,24 +74,22 @@ export default async function AllocationsPage() {
     console.error("Auto status update failed:", err);
   }
 
-  // Fetch allocations for this user's approved requests
+  // Fetch allocations for this user's approved requests using confirmed allocations view
   const [dbAllocations] = await pool.execute<AllocationQueryResult[]>(
     `SELECT
-      a.allocationid,
-      a.allocationstatus,
-      r.reqid,
-      r.resid,
-      r.purpose,
-      r.starttime,
-      r.endtime,
-      res.name AS resourceName,
-      res.type AS resourceType,
-      res.location AS resourceLocation
-     FROM allocations a
-     INNER JOIN requests r ON a.reqid = r.reqid
-     LEFT JOIN resources res ON r.resid = res.id
-     WHERE r.requesterid = ?
-     ORDER BY r.starttime DESC`,
+      AllocationId AS allocationid,
+      AllocationStatus AS allocationstatus,
+      RequestId AS reqid,
+      ResourceId AS resid,
+      Purpose AS purpose,
+      StartTime AS starttime,
+      EndTime AS endtime,
+      ResourceName AS resourceName,
+      ResourceType AS resourceType,
+      ResourceLocation AS resourceLocation
+     FROM vw_confirmed_allocations
+     WHERE RequesterId = ?
+     ORDER BY StartTime DESC`,
     [currentUser.id]
   );
 

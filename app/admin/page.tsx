@@ -135,35 +135,30 @@ export default async function AdminOverviewPage() {
     totalResources: 0,
   };
 
-  // 2. Fetch recent requests
+  // 2. Fetch recent requests using pipeline view
   const [recentRequests] = await pool.execute<RecentAdminRequest[]>(`
     SELECT
-      r.reqid,
-      r.purpose,
-      r.reqtime,
-      r.reqstatus,
-      u.name AS requesterName,
-      res.name AS resourceName
-    FROM requests r
-    INNER JOIN users u ON r.requesterid = u.id
-    INNER JOIN resources res ON r.resid = res.id
-    ORDER BY r.reqtime DESC
+      RequestId AS reqid,
+      Purpose AS purpose,
+      RequestTime AS reqtime,
+      RequestStatus AS reqstatus,
+      RequesterName AS requesterName,
+      ResourceName AS resourceName
+    FROM vw_request_pipeline
+    ORDER BY RequestTime DESC
     LIMIT 5
   `);
 
-  // 3. Fetch recent allocations
+  // 3. Fetch recent allocations using confirmed allocations view
   const [recentAllocations] = await pool.execute<RecentAdminAllocation[]>(`
     SELECT
-      a.allocationid,
-      a.allocationstatus,
-      req.starttime,
-      res.name AS resourceName,
-      u.name AS requesterName
-    FROM allocations a
-    INNER JOIN requests req ON a.reqid = req.reqid
-    INNER JOIN resources res ON req.resid = res.id
-    INNER JOIN users u ON req.requesterid = u.id
-    ORDER BY req.starttime DESC
+      AllocationId AS allocationid,
+      AllocationStatus AS allocationstatus,
+      StartTime AS starttime,
+      ResourceName AS resourceName,
+      RequesterName AS requesterName
+    FROM vw_confirmed_allocations
+    ORDER BY StartTime DESC
     LIMIT 5
   `);
 

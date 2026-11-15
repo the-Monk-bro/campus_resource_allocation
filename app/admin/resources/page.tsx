@@ -42,22 +42,19 @@ interface DbScopeRow extends RowDataPacket {
 export default async function AdminResourcesPage() {
   await requireAdmin();
 
-  // 1. Fetch all resources with allocation and request counts
+  // 1. Fetch all resources with allocation and request counts using resource utilization view
   const [resourceRows] = await pool.execute<DbResourceRow[]>(`
     SELECT
-      r.id,
-      r.name,
-      r.type,
-      r.capacity,
-      r.location,
-      r.status,
-      COUNT(DISTINCT a.allocationid) AS activeAllocations,
-      COUNT(DISTINCT req.reqid) AS totalRequests
-    FROM resources r
-    LEFT JOIN requests req ON req.resid = r.id
-    LEFT JOIN allocations a ON a.reqid = req.reqid AND a.allocationstatus IN ('SCHEDULED', 'ONGOING')
-    GROUP BY r.id, r.name, r.type, r.capacity, r.location, r.status
-    ORDER BY r.type ASC, r.name ASC
+      ResourceId AS id,
+      ResourceName AS name,
+      ResourceType AS type,
+      Capacity AS capacity,
+      Location AS location,
+      ResourceStatus AS status,
+      ActiveAllocations AS activeAllocations,
+      TotalRequests AS totalRequests
+    FROM vw_resource_utilization
+    ORDER BY ResourceType ASC, ResourceName ASC
   `);
 
   // 2. Fetch all approval hierarchies with roles and scopes

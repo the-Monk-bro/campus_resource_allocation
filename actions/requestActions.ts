@@ -38,19 +38,15 @@ export async function getUserActiveAssignmentsAction(): Promise<
 
     const [rows] = await pool.execute<RowDataPacket[]>(
       `SELECT
-        ra.AssignmentId AS assignmentId,
-        ra.RoleId AS roleId,
-        r.RoleName AS roleName,
-        ra.ScopeId AS scopeId,
-        s.ScopeName AS scopeName,
-        s.ScopeType AS scopeType
-       FROM role_assignments ra
-       INNER JOIN roles r ON ra.RoleId = r.RoleId
-       INNER JOIN scopes s ON ra.ScopeId = s.ScopeId
-       WHERE ra.UserId = ?
-         AND ra.ValidFrom <= NOW()
-         AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
-       ORDER BY r.RoleName ASC, s.ScopeName ASC`,
+        AssignmentId AS assignmentId,
+        RoleId AS roleId,
+        RoleName AS roleName,
+        ScopeId AS scopeId,
+        ScopeName AS scopeName,
+        ScopeType AS scopeType
+       FROM vw_active_role_assignments
+       WHERE UserId = ?
+       ORDER BY RoleName ASC, ScopeName ASC`,
       [user.id]
     );
 

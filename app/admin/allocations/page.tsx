@@ -35,30 +35,24 @@ export default async function AdminAllocationsPage() {
 
   const [rows] = await pool.execute<DbAllocationRow[]>(`
     SELECT
-      a.allocationid,
-      a.allocationstatus,
-      r.reqid,
-      r.purpose,
-      r.starttime,
-      r.endtime,
-      r.reqstatus,
-      u.id AS requesterId,
-      u.name AS requesterName,
-      u.email AS requesterEmail,
-      res.id AS resourceId,
-      res.name AS resourceName,
-      res.type AS resourceType,
-      res.location AS resourceLocation,
-      role.RoleName AS requesterRoleName,
-      scope.ScopeName AS requesterScopeName
-    FROM allocations a
-    INNER JOIN requests r ON a.reqid = r.reqid
-    INNER JOIN users u ON r.requesterid = u.id
-    INNER JOIN resources res ON r.resid = res.id
-    LEFT JOIN role_assignments ra ON r.RequesterAssignmentId = ra.AssignmentId
-    LEFT JOIN roles role ON ra.RoleId = role.RoleId
-    LEFT JOIN scopes scope ON ra.ScopeId = scope.ScopeId
-    ORDER BY r.starttime DESC
+      AllocationId AS allocationid,
+      AllocationStatus AS allocationstatus,
+      RequestId AS reqid,
+      Purpose AS purpose,
+      StartTime AS starttime,
+      EndTime AS endtime,
+      'APPROVED' AS reqstatus,
+      RequesterId AS requesterId,
+      RequesterName AS requesterName,
+      RequesterEmail AS requesterEmail,
+      ResourceId AS resourceId,
+      ResourceName AS resourceName,
+      ResourceType AS resourceType,
+      ResourceLocation AS resourceLocation,
+      RequesterRole AS requesterRoleName,
+      RequesterScope AS requesterScopeName
+    FROM vw_confirmed_allocations
+    ORDER BY StartTime DESC
   `);
 
   const initialAllocations: AdminAllocationItem[] = rows.map((r) => ({

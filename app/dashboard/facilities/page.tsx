@@ -24,21 +24,18 @@ export default async function FacilitiesPage() {
     redirect("/api/auth/signin");
   }
 
-  // Fetch all campus resources and active booking counts
+  // Fetch all campus resources and active booking counts using resource utilization view
   const [rows] = await pool.execute<FacilityQueryResult[]>(
     `SELECT
-      r.id,
-      r.name,
-      r.type,
-      r.capacity,
-      r.location,
-      r.status,
-      COUNT(DISTINCT a.allocationid) AS confirmedAllocations
-     FROM resources r
-     LEFT JOIN requests req ON req.resid = r.id AND req.reqstatus = 'APPROVED'
-     LEFT JOIN allocations a ON a.reqid = req.reqid AND a.allocationstatus IN ('SCHEDULED', 'ONGOING')
-     GROUP BY r.id, r.name, r.type, r.capacity, r.location, r.status
-     ORDER BY r.type ASC, r.name ASC`
+      ResourceId AS id,
+      ResourceName AS name,
+      ResourceType AS type,
+      Capacity AS capacity,
+      Location AS location,
+      ResourceStatus AS status,
+      ActiveAllocations AS confirmedAllocations
+     FROM vw_resource_utilization
+     ORDER BY ResourceType ASC, ResourceName ASC`
   );
 
   const facilities: FacilityItem[] = rows.map((r) => ({
