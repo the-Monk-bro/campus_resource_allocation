@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password` VARCHAR(255) NULL DEFAULT NULL,
   `phno` VARCHAR(10) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `users_email_unique` (`email`)
+  UNIQUE KEY `users_email_unique` (`email`),
+  CONSTRAINT `chk_user_email` CHECK (`email` IS NULL OR `email` LIKE '%_@_%'),
+  CONSTRAINT `chk_user_phno` CHECK (`phno` IS NULL OR `phno` REGEXP '^[0-9]{10}$')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
@@ -60,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `role_assignments` (
   KEY `role_assignments_role_scope_idx` (`RoleId`, `ScopeId`),
   CONSTRAINT `fk_role_assignments_user`
     FOREIGN KEY (`UserId`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
+    ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_role_assignments_role`
     FOREIGN KEY (`RoleId`) REFERENCES `roles` (`RoleId`)
     ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -90,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `account` (
   KEY `account_userId_idx` (`userId`),
   CONSTRAINT `fk_account_user`
     FOREIGN KEY (`userId`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
+    ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
@@ -104,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `session` (
   KEY `session_userId_idx` (`userId`),
   CONSTRAINT `fk_session_user`
     FOREIGN KEY (`userId`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
+    ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

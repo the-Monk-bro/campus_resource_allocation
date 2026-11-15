@@ -127,6 +127,21 @@ async function main() {
       console.log("✅ Approval procedures applied successfully!");
     }
 
+    // Apply integrity rules: overlap trigger, stored functions, cleanup procedure and event
+    const integrityPath = path.join(process.cwd(), "sql", "]integrity.sql");
+    if (fs.existsSync(integrityPath)) {
+      console.log("Applying integrity rules from sql/integrity.sql...");
+      const integritySql = fs.readFileSync(integrityPath, "utf-8");
+      for (const stmt of splitSqlStatements(integritySql)) {
+        await connection.query(stmt);
+      }
+      console.log("Integrity trigger, functions, procedure and event applied successfully!");
+
+      try {
+        await connection.query("SET GLOBAL event_scheduler = ON");
+      } catch {
+        console.warn("Could not turn on the event scheduler. Run this yourself: SET GLOBAL event_scheduler = ON;");
+      }
     const requestProceduresPath = path.join(process.cwd(), "sql", "procedures_request.sql");
     if (fs.existsSync(requestProceduresPath)) {
       console.log("📦 Applying request procedures from sql/procedures_request.sql...");
@@ -226,16 +241,16 @@ async function main() {
     // ── 2. Roles ────────────────────────────────────────────────────────────
     console.log("🏷️  Seeding roles...");
     const sampleRoles = [
-      { RoleId: "ROLE-HOD",         RoleName: "Head of Department" },
-      { RoleId: "ROLE-PROF",        RoleName: "Professor" },
+      { RoleId: "ROLE-HOD", RoleName: "Head of Department" },
+      { RoleId: "ROLE-PROF", RoleName: "Professor" },
       { RoleId: "ROLE-FACULTY-ADV", RoleName: "Faculty Advisor" },
-      { RoleId: "ROLE-STUDENT",     RoleName: "Student" },
-      { RoleId: "ROLE-TA",          RoleName: "Teaching Assistant" },
-      { RoleId: "ROLE-COORD",       RoleName: "Club Coordinator" },
-      { RoleId: "ROLE-GENSEC",      RoleName: "General Secretary" },
-      { RoleId: "ROLE-PRES",        RoleName: "Gymkhana President" },
-      { RoleId: "ROLE-STAFF",       RoleName: "Staff Member" },
-      { RoleId: "ROLE-SENATOR",     RoleName: "Student Senator" },
+      { RoleId: "ROLE-STUDENT", RoleName: "Student" },
+      { RoleId: "ROLE-TA", RoleName: "Teaching Assistant" },
+      { RoleId: "ROLE-COORD", RoleName: "Club Coordinator" },
+      { RoleId: "ROLE-GENSEC", RoleName: "General Secretary" },
+      { RoleId: "ROLE-PRES", RoleName: "Gymkhana President" },
+      { RoleId: "ROLE-STAFF", RoleName: "Staff Member" },
+      { RoleId: "ROLE-SENATOR", RoleName: "Student Senator" },
     ];
 
     for (const r of sampleRoles) {
@@ -249,19 +264,19 @@ async function main() {
     // ── 3. Scopes ───────────────────────────────────────────────────────────
     console.log("🌐 Seeding scopes...");
     const sampleScopes = [
-      { ScopeId: "SCOPE-CSE",          ScopeName: "Computer Science and Engineering", ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-EE",           ScopeName: "Electrical Engineering",           ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-ME",           ScopeName: "Mechanical Engineering",           ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-MEMS",         ScopeName: "Materials Science & Engineering",  ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-MATH",         ScopeName: "Mathematics",                      ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-PHY",          ScopeName: "Physics",                          ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-CHEM",         ScopeName: "Chemistry",                        ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-SOI",          ScopeName: "School of Innovation",             ScopeType: "DEPARTMENT" },
-      { ScopeId: "SCOPE-MA101",        ScopeName: "MA101 - Calculus",                 ScopeType: "COURSE" },
-      { ScopeId: "SCOPE-CS257",        ScopeName: "CS257 - Database Systems",         ScopeType: "COURSE" },
-      { ScopeId: "SCOPE-CODING-CLUB",  ScopeName: "Coding Club",                      ScopeType: "CLUB" },
-      { ScopeId: "SCOPE-ROBOTICS-CLUB",ScopeName: "Robotics Club",                    ScopeType: "CLUB" },
-      { ScopeId: "SCOPE-INSTITUTE",    ScopeName: "Institute Administration",         ScopeType: "INSTITUTE" },
+      { ScopeId: "SCOPE-CSE", ScopeName: "Computer Science and Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-EE", ScopeName: "Electrical Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-ME", ScopeName: "Mechanical Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-MEMS", ScopeName: "Materials Science & Engineering", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-MATH", ScopeName: "Mathematics", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-PHY", ScopeName: "Physics", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-CHEM", ScopeName: "Chemistry", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-SOI", ScopeName: "School of Innovation", ScopeType: "DEPARTMENT" },
+      { ScopeId: "SCOPE-MA101", ScopeName: "MA101 - Calculus", ScopeType: "COURSE" },
+      { ScopeId: "SCOPE-CS257", ScopeName: "CS257 - Database Systems", ScopeType: "COURSE" },
+      { ScopeId: "SCOPE-CODING-CLUB", ScopeName: "Coding Club", ScopeType: "CLUB" },
+      { ScopeId: "SCOPE-ROBOTICS-CLUB", ScopeName: "Robotics Club", ScopeType: "CLUB" },
+      { ScopeId: "SCOPE-INSTITUTE", ScopeName: "Institute Administration", ScopeType: "INSTITUTE" },
     ];
 
     for (const s of sampleScopes) {
@@ -276,32 +291,32 @@ async function main() {
     console.log("🔗 Seeding role assignments...");
     const sampleAssignments = [
       // Dr. Rajesh Sharma - HOD of CSE
-      { AssignmentId: 1,  UserId: "usr-admin-01",   RoleId: "ROLE-HOD",         ScopeId: "SCOPE-CSE",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 1, UserId: "usr-admin-01", RoleId: "ROLE-HOD", ScopeId: "SCOPE-CSE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       // Prof. Sunita Rao - HOD of EE and Faculty Advisor for Coding Club
-      { AssignmentId: 2,  UserId: "usr-faculty-01", RoleId: "ROLE-HOD",         ScopeId: "SCOPE-EE",           ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 3,  UserId: "usr-faculty-01", RoleId: "ROLE-FACULTY-ADV", ScopeId: "SCOPE-CODING-CLUB",  ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 2, UserId: "usr-faculty-01", RoleId: "ROLE-HOD", ScopeId: "SCOPE-EE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 3, UserId: "usr-faculty-01", RoleId: "ROLE-FACULTY-ADV", ScopeId: "SCOPE-CODING-CLUB", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       // Vikram Malhotra - Gymkhana President
-      { AssignmentId: 4,  UserId: "usr-pres-01",    RoleId: "ROLE-PRES",        ScopeId: "SCOPE-INSTITUTE",    ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 4, UserId: "usr-pres-01", RoleId: "ROLE-PRES", ScopeId: "SCOPE-INSTITUTE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       // Ananya Iyer - General Secretary
-      { AssignmentId: 5,  UserId: "usr-gensec-01",  RoleId: "ROLE-GENSEC",      ScopeId: "SCOPE-INSTITUTE",    ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 5, UserId: "usr-gensec-01", RoleId: "ROLE-GENSEC", ScopeId: "SCOPE-INSTITUTE", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       // Manoj Kumar - Staff Member in School of Innovation
-      { AssignmentId: 6,  UserId: "usr-staff-01",   RoleId: "ROLE-STAFF",       ScopeId: "SCOPE-SOI",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 6, UserId: "usr-staff-01", RoleId: "ROLE-STAFF", ScopeId: "SCOPE-SOI", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       // Rohan Verma - Club Coordinator (Coding Club) & Student (Mechanical)
-      { AssignmentId: 7,  UserId: "usr-coord-01",   RoleId: "ROLE-COORD",       ScopeId: "SCOPE-CODING-CLUB",  ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 8,  UserId: "usr-coord-01",   RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-ME",           ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 7, UserId: "usr-coord-01", RoleId: "ROLE-COORD", ScopeId: "SCOPE-CODING-CLUB", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 8, UserId: "usr-coord-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-ME", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
       // Aarav Patel - Student (CSE) & Teaching Assistant (CS257)
-      { AssignmentId: 9,  UserId: "usr-student-01", RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-CSE",          ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 10, UserId: "usr-student-01", RoleId: "ROLE-TA",          ScopeId: "SCOPE-CS257",        ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 9, UserId: "usr-student-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-CSE", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 10, UserId: "usr-student-01", RoleId: "ROLE-TA", ScopeId: "SCOPE-CS257", ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
       // Priya Sharma - Teaching Assistant (CS257 - Multiple users sharing TA role) & Student (Math)
-      { AssignmentId: 11, UserId: "usr-priya-01",   RoleId: "ROLE-TA",          ScopeId: "SCOPE-CS257",        ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
-      { AssignmentId: 12, UserId: "usr-priya-01",   RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-MATH",         ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 11, UserId: "usr-priya-01", RoleId: "ROLE-TA", ScopeId: "SCOPE-CS257", ValidFrom: "2026-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 12, UserId: "usr-priya-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-MATH", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
       // Neha Gupta - Student (Chemistry)
-      { AssignmentId: 13, UserId: "usr-neha-01",    RoleId: "ROLE-STUDENT",     ScopeId: "SCOPE-CHEM",         ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 13, UserId: "usr-neha-01", RoleId: "ROLE-STUDENT", ScopeId: "SCOPE-CHEM", ValidFrom: "2024-08-01 00:00:00", ValidUntil: null },
       // Prof. Amit Singh - HOD of Physics
-      { AssignmentId: 14, UserId: "usr-amit-01",    RoleId: "ROLE-HOD",         ScopeId: "SCOPE-PHY",          ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
+      { AssignmentId: 14, UserId: "usr-amit-01", RoleId: "ROLE-HOD", ScopeId: "SCOPE-PHY", ValidFrom: "2025-01-01 00:00:00", ValidUntil: null },
       // Historical / Expired assignments (to test past responsibilities display)
-      { AssignmentId: 15, UserId: "usr-student-01", RoleId: "ROLE-TA",          ScopeId: "SCOPE-MA101",        ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
-      { AssignmentId: 16, UserId: "usr-coord-01",   RoleId: "ROLE-COORD",       ScopeId: "SCOPE-ROBOTICS-CLUB",ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
+      { AssignmentId: 15, UserId: "usr-student-01", RoleId: "ROLE-TA", ScopeId: "SCOPE-MA101", ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
+      { AssignmentId: 16, UserId: "usr-coord-01", RoleId: "ROLE-COORD", ScopeId: "SCOPE-ROBOTICS-CLUB", ValidFrom: "2025-01-01 00:00:00", ValidUntil: "2025-12-31 23:59:59" },
     ];
 
     for (const ra of sampleAssignments) {
@@ -341,17 +356,17 @@ async function main() {
     // ── 6. Approval Hierarchies (RoleId, ScopeId) ───────────────────────────
     console.log("🏛️  Seeding approval hierarchies with Role & Scope...");
     const sampleHierarchies = [
-      { hid: "H-AUDI-L1",   hlevel: 1, resid: "AUDI-MAIN",    roleId: "ROLE-HOD",    scopeId: "SCOPE-CSE" },
-      { hid: "H-AUDI-L2",   hlevel: 2, resid: "AUDI-MAIN",    roleId: "ROLE-PRES",   scopeId: "SCOPE-INSTITUTE" },
-      { hid: "H-LH201-L1",  hlevel: 1, resid: "LH-201",       roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
-      { hid: "H-LH101-L1",  hlevel: 1, resid: "LH-101",       roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
-      { hid: "H-LH102-L1",  hlevel: 1, resid: "LH-102",       roleId: "ROLE-STAFF",  scopeId: "SCOPE-SOI" },
-      { hid: "H-LABCSE-L1", hlevel: 1, resid: "LAB-CSE-1",    roleId: "ROLE-HOD",    scopeId: "SCOPE-CSE" },
-      { hid: "H-AI-L1",     hlevel: 1, resid: "LAB-AI-GPU",   roleId: "ROLE-HOD",    scopeId: "SCOPE-CSE" },
-      { hid: "H-SPORT-L1",  hlevel: 1, resid: "SPORTS-ARENA", roleId: "ROLE-GENSEC", scopeId: "SCOPE-INSTITUTE" },
-      { hid: "H-SPORT-L2",  hlevel: 2, resid: "SPORTS-ARENA", roleId: "ROLE-PRES",   scopeId: "SCOPE-INSTITUTE" },
-      { hid: "H-SEMA-L1",   hlevel: 1, resid: "SEMINAR-A",    roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
-      { hid: "H-CR301-L1",  hlevel: 1, resid: "CR-301",       roleId: "ROLE-HOD",    scopeId: "SCOPE-EE" },
+      { hid: "H-AUDI-L1", hlevel: 1, resid: "AUDI-MAIN", roleId: "ROLE-HOD", scopeId: "SCOPE-CSE" },
+      { hid: "H-AUDI-L2", hlevel: 2, resid: "AUDI-MAIN", roleId: "ROLE-PRES", scopeId: "SCOPE-INSTITUTE" },
+      { hid: "H-LH201-L1", hlevel: 1, resid: "LH-201", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
+      { hid: "H-LH101-L1", hlevel: 1, resid: "LH-101", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
+      { hid: "H-LH102-L1", hlevel: 1, resid: "LH-102", roleId: "ROLE-STAFF", scopeId: "SCOPE-SOI" },
+      { hid: "H-LABCSE-L1", hlevel: 1, resid: "LAB-CSE-1", roleId: "ROLE-HOD", scopeId: "SCOPE-CSE" },
+      { hid: "H-AI-L1", hlevel: 1, resid: "LAB-AI-GPU", roleId: "ROLE-HOD", scopeId: "SCOPE-CSE" },
+      { hid: "H-SPORT-L1", hlevel: 1, resid: "SPORTS-ARENA", roleId: "ROLE-GENSEC", scopeId: "SCOPE-INSTITUTE" },
+      { hid: "H-SPORT-L2", hlevel: 2, resid: "SPORTS-ARENA", roleId: "ROLE-PRES", scopeId: "SCOPE-INSTITUTE" },
+      { hid: "H-SEMA-L1", hlevel: 1, resid: "SEMINAR-A", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
+      { hid: "H-CR301-L1", hlevel: 1, resid: "CR-301", roleId: "ROLE-HOD", scopeId: "SCOPE-EE" },
     ];
 
     for (const h of sampleHierarchies) {
@@ -388,18 +403,18 @@ async function main() {
     const r12 = slot(8, 10, 2);
 
     const sampleRequests = [
-      { reqid: 1,  requesterid: "usr-student-01", assignmentId: 9,  resid: "LH-201",      purpose: "Hackathon 2026 Opening Keynote",               reqtime: new Date(r1.start.getTime() - 2*dayMs), starttime: r1.start, endtime: r1.end,   reqstatus: "APPROVED" },
-      { reqid: 2,  requesterid: "usr-coord-01",   assignmentId: 7,  resid: "AUDI-MAIN",   purpose: "Annual Cultural Fest Grand Rehearsal",          reqtime: new Date(r2.start.getTime() - 3*dayMs), starttime: r2.start, endtime: r2.end,   reqstatus: "APPROVED" },
-      { reqid: 3,  requesterid: "usr-student-01", assignmentId: 10, resid: "LAB-AI-GPU",  purpose: "Deep Learning Workshop with PyTorch",           reqtime: new Date(now.getTime() - 4*3600*1000),  starttime: r3.start, endtime: r3.end,   reqstatus: "PENDING" },
-      { reqid: 4,  requesterid: "usr-faculty-01", assignmentId: 2,  resid: "SEMINAR-A",   purpose: "Guest Lecture on Quantum Computing",            reqtime: new Date(now.getTime() - 1*dayMs),      starttime: r4.start, endtime: r4.end,   reqstatus: "APPROVED" },
-      { reqid: 5,  requesterid: "usr-student-01", assignmentId: 9,  resid: "LAB-CSE-1",   purpose: "Overnight LAN Gaming Tournament",               reqtime: new Date(r5.start.getTime() - 1*dayMs), starttime: r5.start, endtime: r5.end,   reqstatus: "REJECTED" },
-      { reqid: 6,  requesterid: "usr-priya-01",   assignmentId: 12, resid: "CR-301",      purpose: "Linear Algebra Peer Tutoring Session",          reqtime: new Date(now.getTime() - 12*3600*1000), starttime: r6.start, endtime: r6.end,   reqstatus: "CANCELLED" },
-      { reqid: 7,  requesterid: "usr-gensec-01",  assignmentId: 5,  resid: "SPORTS-ARENA",purpose: "Inter-Department Badminton Championship",        reqtime: new Date(now.getTime() - 6*3600*1000),  starttime: r7.start, endtime: r7.end,   reqstatus: "PENDING" },
-      { reqid: 8,  requesterid: "usr-coord-01",   assignmentId: 7,  resid: "LH-101",      purpose: "IEEE Student Branch Paper Presentation",         reqtime: new Date(now.getTime() - 2*dayMs),      starttime: r8.start, endtime: r8.end,   reqstatus: "APPROVED" },
-      { reqid: 9,  requesterid: "usr-staff-01",   assignmentId: 6,  resid: "LH-102",      purpose: "Campus Placement Aptitude Test",                 reqtime: new Date(now.getTime() - 1*dayMs),      starttime: r9.start, endtime: r9.end,   reqstatus: "APPROVED" },
-      { reqid: 10, requesterid: "usr-student-01", assignmentId: 9,  resid: "SPORTS-ARENA",purpose: "Robotics Club Drone Navigation Demo",             reqtime: new Date(now.getTime() - 2*3600*1000),  starttime: r10.start, endtime: r10.end, reqstatus: "PENDING" },
-      { reqid: 11, requesterid: "usr-neha-01",    assignmentId: 13, resid: "SEMINAR-A",   purpose: "Club Social Gathering",                          reqtime: new Date(r11.start.getTime() - 1*dayMs),starttime: r11.start, endtime: r11.end, reqstatus: "REJECTED" },
-      { reqid: 12, requesterid: "usr-faculty-01", assignmentId: 2,  resid: "CR-301",      purpose: "PhD Comprehensive Viva Defense",                  reqtime: new Date(now.getTime() - 18*3600*1000), starttime: r12.start, endtime: r12.end, reqstatus: "APPROVED" },
+      { reqid: 1, requesterid: "usr-student-01", assignmentId: 9, resid: "LH-201", purpose: "Hackathon 2026 Opening Keynote", reqtime: new Date(r1.start.getTime() - 2 * dayMs), starttime: r1.start, endtime: r1.end, reqstatus: "APPROVED" },
+      { reqid: 2, requesterid: "usr-coord-01", assignmentId: 7, resid: "AUDI-MAIN", purpose: "Annual Cultural Fest Grand Rehearsal", reqtime: new Date(r2.start.getTime() - 3 * dayMs), starttime: r2.start, endtime: r2.end, reqstatus: "APPROVED" },
+      { reqid: 3, requesterid: "usr-student-01", assignmentId: 10, resid: "LAB-AI-GPU", purpose: "Deep Learning Workshop with PyTorch", reqtime: new Date(now.getTime() - 4 * 3600 * 1000), starttime: r3.start, endtime: r3.end, reqstatus: "PENDING" },
+      { reqid: 4, requesterid: "usr-faculty-01", assignmentId: 2, resid: "SEMINAR-A", purpose: "Guest Lecture on Quantum Computing", reqtime: new Date(now.getTime() - 1 * dayMs), starttime: r4.start, endtime: r4.end, reqstatus: "APPROVED" },
+      { reqid: 5, requesterid: "usr-student-01", assignmentId: 9, resid: "LAB-CSE-1", purpose: "Overnight LAN Gaming Tournament", reqtime: new Date(r5.start.getTime() - 1 * dayMs), starttime: r5.start, endtime: r5.end, reqstatus: "REJECTED" },
+      { reqid: 6, requesterid: "usr-priya-01", assignmentId: 12, resid: "CR-301", purpose: "Linear Algebra Peer Tutoring Session", reqtime: new Date(now.getTime() - 12 * 3600 * 1000), starttime: r6.start, endtime: r6.end, reqstatus: "CANCELLED" },
+      { reqid: 7, requesterid: "usr-gensec-01", assignmentId: 5, resid: "SPORTS-ARENA", purpose: "Inter-Department Badminton Championship", reqtime: new Date(now.getTime() - 6 * 3600 * 1000), starttime: r7.start, endtime: r7.end, reqstatus: "PENDING" },
+      { reqid: 8, requesterid: "usr-coord-01", assignmentId: 7, resid: "LH-101", purpose: "IEEE Student Branch Paper Presentation", reqtime: new Date(now.getTime() - 2 * dayMs), starttime: r8.start, endtime: r8.end, reqstatus: "APPROVED" },
+      { reqid: 9, requesterid: "usr-staff-01", assignmentId: 6, resid: "LH-102", purpose: "Campus Placement Aptitude Test", reqtime: new Date(now.getTime() - 1 * dayMs), starttime: r9.start, endtime: r9.end, reqstatus: "APPROVED" },
+      { reqid: 10, requesterid: "usr-student-01", assignmentId: 9, resid: "SPORTS-ARENA", purpose: "Robotics Club Drone Navigation Demo", reqtime: new Date(now.getTime() - 2 * 3600 * 1000), starttime: r10.start, endtime: r10.end, reqstatus: "PENDING" },
+      { reqid: 11, requesterid: "usr-neha-01", assignmentId: 13, resid: "SEMINAR-A", purpose: "Club Social Gathering", reqtime: new Date(r11.start.getTime() - 1 * dayMs), starttime: r11.start, endtime: r11.end, reqstatus: "REJECTED" },
+      { reqid: 12, requesterid: "usr-faculty-01", assignmentId: 2, resid: "CR-301", purpose: "PhD Comprehensive Viva Defense", reqtime: new Date(now.getTime() - 18 * 3600 * 1000), starttime: r12.start, endtime: r12.end, reqstatus: "APPROVED" },
     ];
 
     for (const req of sampleRequests) {
@@ -414,18 +429,18 @@ async function main() {
     // ── 8. Approval Steps (ActionByUserId, ActionAsAssignmentId) ────────────
     console.log("🚦 Seeding approval steps with audit details...");
     const sampleApprovalSteps = [
-      { hid: "H-LH201-L1",  reqid: 1,  actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(r1.start.getTime() - 2*dayMs),      actiontime: new Date(r1.start.getTime() - 2*dayMs + 3600*1000),  shortcomment: "Approved. Microphone and projector reserved.",         approvalstatus: "APPROVED" },
-      { hid: "H-AUDI-L1",   reqid: 2,  actionByUserId: "usr-admin-01",   actionAsAssignmentId: 1, issuetime: new Date(r2.start.getTime() - 3*dayMs),      actiontime: new Date(r2.start.getTime() - 3*dayMs + 2*3600*1000), shortcomment: "Approved — stage lighting and audio system booked.",    approvalstatus: "APPROVED" },
-      { hid: "H-AUDI-L2",   reqid: 2,  actionByUserId: "usr-pres-01",    actionAsAssignmentId: 4, issuetime: new Date(r2.start.getTime() - 3*dayMs + 3600*1000), actiontime: new Date(r2.start.getTime() - 2*dayMs),         shortcomment: "President approval granted.",                           approvalstatus: "APPROVED" },
-      { hid: "H-AI-L1",     reqid: 3,  actionByUserId: null,             actionAsAssignmentId: null, issuetime: new Date(now.getTime() - 4*3600*1000),        actiontime: null,                                                  shortcomment: null,                                                    approvalstatus: "PENDING" },
-      { hid: "H-SEMA-L1",   reqid: 4,  actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(now.getTime() - 1*dayMs),            actiontime: new Date(now.getTime() - 1*dayMs + 45*60*1000),       shortcomment: "Approved with guest reception arrangements.",           approvalstatus: "APPROVED" },
-      { hid: "H-LABCSE-L1", reqid: 5,  actionByUserId: "usr-admin-01",   actionAsAssignmentId: 1, issuetime: new Date(r5.start.getTime() - 1*dayMs),      actiontime: new Date(r5.start.getTime() - 1*dayMs + 30*60*1000),  shortcomment: "Rejected — labs not permitted for gaming events.",       approvalstatus: "REJECTED" },
-      { hid: "H-SPORT-L1",  reqid: 7,  actionByUserId: null,             actionAsAssignmentId: null, issuetime: new Date(now.getTime() - 6*3600*1000),        actiontime: null,                                                  shortcomment: null,                                                    approvalstatus: "PENDING" },
-      { hid: "H-LH101-L1",  reqid: 8,  actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(now.getTime() - 2*dayMs),            actiontime: new Date(now.getTime() - 2*dayMs + 4*3600*1000),      shortcomment: "Approved for IEEE student event.",                      approvalstatus: "APPROVED" },
-      { hid: "H-LH102-L1",  reqid: 9,  actionByUserId: "usr-staff-01",   actionAsAssignmentId: 6, issuetime: new Date(now.getTime() - 1*dayMs),            actiontime: new Date(now.getTime() - 1*dayMs + 2*3600*1000),      shortcomment: "Approved for campus placement assessment.",             approvalstatus: "APPROVED" },
-      { hid: "H-SPORT-L1",  reqid: 10, actionByUserId: null,             actionAsAssignmentId: null, issuetime: new Date(now.getTime() - 2*3600*1000),        actiontime: null,                                                  shortcomment: null,                                                    approvalstatus: "PENDING" },
-      { hid: "H-SEMA-L1",   reqid: 11, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(r11.start.getTime() - 1*dayMs),     actiontime: new Date(r11.start.getTime() - 1*dayMs + 2*3600*1000), shortcomment: "Rejected — seminar halls not for personal events.",    approvalstatus: "REJECTED" },
-      { hid: "H-CR301-L1",  reqid: 12, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(now.getTime() - 18*3600*1000),       actiontime: new Date(now.getTime() - 17*3600*1000),                shortcomment: "Approved for PhD defense committee.",                   approvalstatus: "APPROVED" },
+      { hid: "H-LH201-L1", reqid: 1, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(r1.start.getTime() - 2 * dayMs), actiontime: new Date(r1.start.getTime() - 2 * dayMs + 3600 * 1000), shortcomment: "Approved. Microphone and projector reserved.", approvalstatus: "APPROVED" },
+      { hid: "H-AUDI-L1", reqid: 2, actionByUserId: "usr-admin-01", actionAsAssignmentId: 1, issuetime: new Date(r2.start.getTime() - 3 * dayMs), actiontime: new Date(r2.start.getTime() - 3 * dayMs + 2 * 3600 * 1000), shortcomment: "Approved — stage lighting and audio system booked.", approvalstatus: "APPROVED" },
+      { hid: "H-AUDI-L2", reqid: 2, actionByUserId: "usr-pres-01", actionAsAssignmentId: 4, issuetime: new Date(r2.start.getTime() - 3 * dayMs + 3600 * 1000), actiontime: new Date(r2.start.getTime() - 2 * dayMs), shortcomment: "President approval granted.", approvalstatus: "APPROVED" },
+      { hid: "H-AI-L1", reqid: 3, actionByUserId: null, actionAsAssignmentId: null, issuetime: new Date(now.getTime() - 4 * 3600 * 1000), actiontime: null, shortcomment: null, approvalstatus: "PENDING" },
+      { hid: "H-SEMA-L1", reqid: 4, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(now.getTime() - 1 * dayMs), actiontime: new Date(now.getTime() - 1 * dayMs + 45 * 60 * 1000), shortcomment: "Approved with guest reception arrangements.", approvalstatus: "APPROVED" },
+      { hid: "H-LABCSE-L1", reqid: 5, actionByUserId: "usr-admin-01", actionAsAssignmentId: 1, issuetime: new Date(r5.start.getTime() - 1 * dayMs), actiontime: new Date(r5.start.getTime() - 1 * dayMs + 30 * 60 * 1000), shortcomment: "Rejected — labs not permitted for gaming events.", approvalstatus: "REJECTED" },
+      { hid: "H-SPORT-L1", reqid: 7, actionByUserId: null, actionAsAssignmentId: null, issuetime: new Date(now.getTime() - 6 * 3600 * 1000), actiontime: null, shortcomment: null, approvalstatus: "PENDING" },
+      { hid: "H-LH101-L1", reqid: 8, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(now.getTime() - 2 * dayMs), actiontime: new Date(now.getTime() - 2 * dayMs + 4 * 3600 * 1000), shortcomment: "Approved for IEEE student event.", approvalstatus: "APPROVED" },
+      { hid: "H-LH102-L1", reqid: 9, actionByUserId: "usr-staff-01", actionAsAssignmentId: 6, issuetime: new Date(now.getTime() - 1 * dayMs), actiontime: new Date(now.getTime() - 1 * dayMs + 2 * 3600 * 1000), shortcomment: "Approved for campus placement assessment.", approvalstatus: "APPROVED" },
+      { hid: "H-SPORT-L1", reqid: 10, actionByUserId: null, actionAsAssignmentId: null, issuetime: new Date(now.getTime() - 2 * 3600 * 1000), actiontime: null, shortcomment: null, approvalstatus: "PENDING" },
+      { hid: "H-SEMA-L1", reqid: 11, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(r11.start.getTime() - 1 * dayMs), actiontime: new Date(r11.start.getTime() - 1 * dayMs + 2 * 3600 * 1000), shortcomment: "Rejected — seminar halls not for personal events.", approvalstatus: "REJECTED" },
+      { hid: "H-CR301-L1", reqid: 12, actionByUserId: "usr-faculty-01", actionAsAssignmentId: 2, issuetime: new Date(now.getTime() - 18 * 3600 * 1000), actiontime: new Date(now.getTime() - 17 * 3600 * 1000), shortcomment: "Approved for PhD defense committee.", approvalstatus: "APPROVED" },
     ];
 
     for (const s of sampleApprovalSteps) {
@@ -440,11 +455,11 @@ async function main() {
     // ── 9. Allocations ───────────────────────────────────────────────────────
     console.log("📅 Seeding allocations...");
     const sampleAllocations = [
-      { allocationid: 1, reqid: 1,  allocationstatus: "COMPLETED" },
-      { allocationid: 2, reqid: 2,  allocationstatus: "COMPLETED" },
-      { allocationid: 3, reqid: 4,  allocationstatus: "SCHEDULED" },
-      { allocationid: 4, reqid: 8,  allocationstatus: "SCHEDULED" },
-      { allocationid: 5, reqid: 9,  allocationstatus: "SCHEDULED" },
+      { allocationid: 1, reqid: 1, allocationstatus: "COMPLETED" },
+      { allocationid: 2, reqid: 2, allocationstatus: "COMPLETED" },
+      { allocationid: 3, reqid: 4, allocationstatus: "SCHEDULED" },
+      { allocationid: 4, reqid: 8, allocationstatus: "SCHEDULED" },
+      { allocationid: 5, reqid: 9, allocationstatus: "SCHEDULED" },
       { allocationid: 6, reqid: 12, allocationstatus: "SCHEDULED" },
     ];
 
