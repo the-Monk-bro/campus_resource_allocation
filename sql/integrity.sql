@@ -1,6 +1,7 @@
 USE campus_resource_allocation;
 
 DROP EVENT IF EXISTS evt_auto_complete_allocations;
+DROP PROCEDURE IF EXISTS sp_update_allocation_statuses;
 DROP PROCEDURE IF EXISTS sp_expire_completed_allocations;
 DROP TRIGGER IF EXISTS trg_prevent_allocation_overlap;
 DROP FUNCTION IF EXISTS fn_check_resource_availability;
@@ -74,19 +75,34 @@ BEGIN
   RETURN v_count > 0;
 END$$
 
--- Procedure: marks finished bookings as COMPLETED
-CREATE PROCEDURE sp_expire_completed_allocations()
+-- Procedure: updates allocation lifecycle (SCHEDULED -> ONGOING -> COMPLETED)
+CREATE PROCEDURE sp_update_allocation_statuses()
 BEGIN
+  -- 1. Advance SCHEDULED -> ONGOING when start time has arrived
+  UPDATE allocations a
+  JOIN requests r ON r.reqid = a.reqid
+  SET a.allocationstatus = 'ONGOING'
+  WHERE a.allocationstatus = 'SCHEDULED'
+    AND r.starttime <= NOW()
+    AND r.endtime > NOW();
+
+  -- 2. Advance ONGOING / SCHEDULED -> COMPLETED when end time has passed
   UPDATE allocations a
   JOIN requests r ON r.reqid = a.reqid
   SET a.allocationstatus = 'COMPLETED'
   WHERE a.allocationstatus IN ('SCHEDULED', 'ONGOING')
-    AND r.endtime < NOW();
+    AND r.endtime <= NOW();
+END$$
+
+-- Backward-compatible alias for existing scripts
+CREATE PROCEDURE sp_expire_completed_allocations()
+BEGIN
+  CALL sp_update_allocation_statuses();
 END$$
 
 DELIMITER ;
 
--- Event: runs the procedure every 15 minutes
+-- Event: runs the status updater every 15 minutes
 CREATE EVENT IF NOT EXISTS evt_auto_complete_allocations
 ON SCHEDULE EVERY 15 MINUTE
-DO CALL sp_expire_completed_allocations();
+DO CALL sp_update_allocation_statuses();

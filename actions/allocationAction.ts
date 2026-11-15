@@ -39,3 +39,16 @@ export async function checkResourceAvailabilityAction(
         return { success: false, error: message };
     }
 }
+
+// Executes MySQL procedure sp_update_allocation_statuses to advance
+// SCHEDULED -> ONGOING -> COMPLETED allocations based on wall-clock time.
+export async function updateAllocationStatusesAction(): Promise<{ success: boolean; error?: string }> {
+    try {
+        await pool.query("CALL sp_update_allocation_statuses()");
+        return { success: true };
+    } catch (error: unknown) {
+        console.error("Failed to update allocation statuses:", error);
+        const message = error instanceof Error ? error.message : "Failed to update allocation statuses.";
+        return { success: false, error: message };
+    }
+}

@@ -43,6 +43,13 @@ function formatDate(date: Date) {
 export default async function AdminOverviewPage() {
   const admin = await requireAdmin();
 
+  // Advance lifecycle states (SCHEDULED -> ONGOING -> COMPLETED) based on current time
+  try {
+    await pool.query("CALL sp_update_allocation_statuses()");
+  } catch (err) {
+    console.error("Auto status update failed:", err);
+  }
+
   // 1. Fetch system statistics
   const [statRows] = await pool.execute<AdminStatRow[]>(`
     SELECT

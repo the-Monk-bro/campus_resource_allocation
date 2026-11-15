@@ -405,7 +405,11 @@ async function main() {
     const r1 = slot(-3, 10, 4);
     const r2 = slot(-1, 14, 3);
     const r3 = slot(1, 9, 3);
-    const r4 = slot(2, 11, 2);
+    // r4 is an active ONGOING allocation (started 45 mins ago, ends in 75 mins)
+    const r4 = {
+      start: new Date(now.getTime() - 45 * 60 * 1000),
+      end: new Date(now.getTime() + 75 * 60 * 1000),
+    };
     const r5 = slot(-2, 18, 4);
     const r6 = slot(3, 16, 2);
     const r7 = slot(4, 8, 4);
@@ -470,7 +474,7 @@ async function main() {
     const sampleAllocations = [
       { allocationid: 1, reqid: 1, allocationstatus: "COMPLETED" },
       { allocationid: 2, reqid: 2, allocationstatus: "COMPLETED" },
-      { allocationid: 3, reqid: 4, allocationstatus: "SCHEDULED" },
+      { allocationid: 3, reqid: 4, allocationstatus: "ONGOING" },
       { allocationid: 4, reqid: 8, allocationstatus: "SCHEDULED" },
       { allocationid: 5, reqid: 9, allocationstatus: "SCHEDULED" },
       { allocationid: 6, reqid: 12, allocationstatus: "SCHEDULED" },

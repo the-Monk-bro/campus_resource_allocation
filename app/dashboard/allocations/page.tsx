@@ -49,6 +49,13 @@ export default async function AllocationsPage() {
     redirect("/onboarding");
   }
 
+  // Advance lifecycle states (SCHEDULED -> ONGOING -> COMPLETED) based on current time
+  try {
+    await pool.query("CALL sp_update_allocation_statuses()");
+  } catch (err) {
+    console.error("Auto status update failed:", err);
+  }
+
   // Fetch allocations for this user's approved requests
   const [dbAllocations] = await pool.execute<AllocationQueryResult[]>(
     `SELECT

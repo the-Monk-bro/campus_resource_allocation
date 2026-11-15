@@ -25,6 +25,13 @@ interface DbAllocationRow extends RowDataPacket {
 export default async function AdminAllocationsPage() {
   await requireAdmin();
 
+  // Advance lifecycle states (SCHEDULED -> ONGOING -> COMPLETED) based on current time
+  try {
+    await pool.query("CALL sp_update_allocation_statuses()");
+  } catch (err) {
+    console.error("Auto status update failed:", err);
+  }
+
   const [rows] = await pool.execute<DbAllocationRow[]>(`
     SELECT
       a.allocationid,
