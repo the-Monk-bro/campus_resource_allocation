@@ -229,7 +229,7 @@ export async function getApprovalHierarchyAction(
         s.ScopeType AS scopeType
        FROM approval_hierarchies ah
        INNER JOIN roles r ON ah.RoleId = r.RoleId
-       INNER JOIN scopes s ON ah.ScopeId = s.ScopeId
+       LEFT JOIN scopes s ON ah.ScopeId = s.ScopeId
        WHERE ah.resid = ?
        ORDER BY ah.hlevel ASC`,
       [resid.trim()]
@@ -243,8 +243,8 @@ export async function getApprovalHierarchyAction(
         roleId: r.roleId,
         roleName: r.roleName,
         scopeId: r.scopeId,
-        scopeName: r.scopeName,
-        scopeType: r.scopeType,
+        scopeName: r.scopeName || "Any Scope",
+        scopeType: r.scopeType || "",
         currentApproverName: null,
         currentApproverEmail: null,
       })),

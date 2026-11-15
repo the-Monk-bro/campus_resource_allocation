@@ -51,7 +51,7 @@ proc_label: BEGIN
         ROLLBACK;
         LEAVE proc_label;
     END IF;
-    -- 2. Verify that the user holds an active role assignment matching the required (RoleId, ScopeId)
+    -- 2. Verify that the user holds an active role assignment matching the required Role (and matching Scope if defined)
     SELECT ra.AssignmentId INTO v_assignment_id
     FROM role_assignments ra
     INNER JOIN approval_hierarchies ah ON ah.RoleId = ra.RoleId AND (ah.ScopeId IS NULL OR ah.ScopeId = ra.ScopeId)
