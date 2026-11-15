@@ -12,7 +12,7 @@ USE campus_resource_allocation;
 --          Eliminates redundant temporal checking across the application.
 -- ----------------------------------------------------------------------------
 DROP VIEW IF EXISTS vw_active_role_assignments;
-CREATE OR REPLACE VIEW vw_active_role_assignments AS
+CREATE OR REPLACE VIEW vw_active_role_assignment AS
 SELECT
   ra.AssignmentId,
   ra.UserId,
