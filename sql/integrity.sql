@@ -2,7 +2,6 @@ USE campus_resource_allocation;
 
 DROP EVENT IF EXISTS evt_auto_complete_allocations;
 DROP PROCEDURE IF EXISTS sp_update_allocation_statuses;
-DROP PROCEDURE IF EXISTS sp_expire_completed_allocations;
 DROP TRIGGER IF EXISTS trg_prevent_allocation_overlap;
 DROP FUNCTION IF EXISTS fn_check_resource_availability;
 DROP FUNCTION IF EXISTS fn_is_user_authorized_for_step;
@@ -92,12 +91,6 @@ BEGIN
   SET a.allocationstatus = 'COMPLETED'
   WHERE a.allocationstatus IN ('SCHEDULED', 'ONGOING')
     AND r.endtime <= NOW();
-END$$
-
--- Backward-compatible alias for existing scripts
-CREATE PROCEDURE sp_expire_completed_allocations()
-BEGIN
-  CALL sp_update_allocation_statuses();
 END$$
 
 DELIMITER ;

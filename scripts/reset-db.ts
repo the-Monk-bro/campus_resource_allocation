@@ -488,6 +488,10 @@ async function main() {
     }
     console.log(`✅ Seeded ${sampleAllocations.length} allocations.`);
 
+    console.log("🔄 Synchronizing allocation statuses with current timestamp...");
+    await connection.query("CALL sp_update_allocation_statuses()");
+    console.log("✅ Allocation statuses synchronized.");
+
     console.log("\n🎉 Database reset and seeding completed successfully!");
     console.log("-------------------------------------------------------");
     console.log("Demo Credentials (all accounts use password: password123):");

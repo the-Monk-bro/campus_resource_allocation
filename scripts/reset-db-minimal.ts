@@ -127,7 +127,7 @@ async function main() {
       console.log("✅ Approval procedures applied successfully!");
     }
 
-    // Apply integrity rules: overlap trigger, stored functions, cleanup procedure and event
+    // Apply integrity rules: overlap trigger, stored functions, allocation status procedure and event
     const integrityPath = path.join(process.cwd(), "sql", "integrity.sql");
     if (fs.existsSync(integrityPath)) {
       console.log("Applying integrity rules from sql/integrity.sql...");

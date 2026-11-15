@@ -77,10 +77,10 @@ The repository includes automated TypeScript scripts to reset and seed the datab
   ```
 
 ---
-## 3b. Load Integrity Rules, Functions and Automatic Cleanup
+## 3b. Load Integrity Rules, Functions and Automatic Status Updates
 
 After importing schema.sql, also run sql/integrity.sql. It creates the
-overlap trigger, the two stored functions, the cleanup procedure and the event.
+overlap trigger, the two stored functions, the allocation status update procedure (`sp_update_allocation_statuses`) and the recurring event (`evt_auto_complete_allocations`).
 
 Using the MySQL CLI (from the project root):
 ```bash
