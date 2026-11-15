@@ -1,9 +1,10 @@
 "use server";
 
 import pool from "@/lib/db";
-import { UserRow, ResourceRow, ApprovalHierarchyRow, RequestRow } from "@/lib/types/db";
+import { UserRow } from "@/lib/types/db";
 import { ApproverInfo, UserActiveRoleAssignment } from "@/components/requests/types";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { RowDataPacket } from "mysql2/promise";
+import type { PoolConnection } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -13,8 +14,8 @@ export interface CreateRequestInput {
   resid: string;
   assignmentId: number;
   purpose?: string;
-  starttime: string; // ISO or datetime-local string
-  endtime: string;   // ISO or datetime-local string
+  starttime: string;
+  endtime: string;
 }
 
 export async function getUserActiveAssignmentsAction(): Promise<
@@ -72,48 +73,95 @@ export async function getUserActiveAssignmentsAction(): Promise<
   }
 }
 
+type ProcedureResult = {
+  newReqId: number | null;
+  statusCode: string;
+  statusMessage: string;
+};
+
+interface ProcedureOutputRow extends RowDataPacket {
+  newReqId: number | null;
+  statusCode: string | null;
+  statusMessage: string | null;
+}
+
+const retryableCodes = new Set(["DEADLOCK", "LOCK_TIMEOUT"]);
+
+const procedureErrors: Record<string, string> = {
+  INVALID_TIME: "End time must be strictly after start time.",
+  INVALID_ASSIGNMENT: "The selected role assignment is invalid, expired, or does not belong to you.",
+  NOT_FOUND: "The resource or request was not found.",
+  UNAVAILABLE: "The selected resource is currently unavailable.",
+  CONFLICT: "The resource is already booked or has a pending request in that time window.",
+  NO_HIERARCHY: "No approval hierarchy is configured for this resource.",
+  NO_APPROVER: "An approval level has no active approver assigned.",
+  INCOMPLETE_STEPS: "Could not create all approval steps. Nothing was saved.",
+  FORBIDDEN: "Only the requester can cancel this request.",
+  NOT_CANCELLABLE: "Only pending requests can be cancelled.",
+  DEADLOCK: "The database is busy. Please try again.",
+  LOCK_TIMEOUT: "The database is busy. Please try again.",
+  ERROR: "Database operation failed.",
+};
+
+async function callRequestProcedure(
+  conn: PoolConnection,
+  sql: string,
+  params: Array<string | number | Date | null>
+): Promise<ProcedureResult> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    await conn.query("SET @new_reqid = NULL, @status_code = NULL, @status_msg = NULL");
+    await conn.query(sql, params);
+    const [rows] = await conn.query<ProcedureOutputRow[]>(
+      "SELECT @new_reqid AS newReqId, @status_code AS statusCode, @status_msg AS statusMessage"
+    );
+    const row = rows[0];
+    const result: ProcedureResult = {
+      newReqId: row?.newReqId == null ? null : Number(row.newReqId),
+      statusCode: row?.statusCode ?? "ERROR",
+      statusMessage: row?.statusMessage ?? "",
+    };
+
+    if (retryableCodes.has(result.statusCode) && attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, 100 * attempt));
+      continue;
+    }
+    return result;
+  }
+  throw new Error("Request procedure failed after retries.");
+}
+
 export async function createRequestAction(input: CreateRequestInput) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.email) {
       return { success: false, error: "Unauthorized. Please sign in to continue." };
     }
 
-    // Find the logged-in user in DB
     const [userRows] = await pool.execute<UserRow[]>(
       `SELECT id, name, email FROM users WHERE email = ? LIMIT 1`,
       [session.user.email]
     );
-
     const user = userRows[0];
     if (!user) {
       return { success: false, error: "User record not found. Please complete profile onboarding." };
     }
 
     const { resid, assignmentId, purpose, starttime, endtime } = input;
-
-    // Validate required fields
     if (!resid?.trim()) {
       return { success: false, error: "Resource selection is required." };
     }
-
-    if (!assignmentId) {
+    if (!Number.isInteger(Number(assignmentId)) || Number(assignmentId) <= 0) {
       return { success: false, error: "Please select the role assignment under which you are requesting." };
     }
-
     if (!starttime || !endtime) {
       return { success: false, error: "Both start time and end time are required." };
     }
 
     const startDate = new Date(starttime);
     const endDate = new Date(endtime);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
       return { success: false, error: "Invalid date/time format provided." };
     }
-
-    // Check DB constraint: endtime > starttime
     if (endDate <= startDate) {
       return { success: false, error: "End time must be strictly after start time." };
     }
@@ -167,81 +215,32 @@ export async function createRequestAction(input: CreateRequestInput) {
       return { success: false, error: "Purpose cannot exceed 100 characters." };
     }
 
-    const now = new Date();
     const conn = await pool.getConnection();
-
-    let newRequestId: number;
-
     try {
-      await conn.beginTransaction();
-
-      // Insert request with RequesterAssignmentId
-      const [insertResult] = await conn.execute<ResultSetHeader>(
-        `INSERT INTO requests (requesterid, RequesterAssignmentId, resid, purpose, starttime, endtime, reqstatus, reqtime)
-         VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
-        [user.id, assignmentId, existingResource.id, trimmedPurpose || null, startDate, endDate, now]
+      const result = await callRequestProcedure(
+        conn,
+        "CALL sp_create_resource_request(?, ?, ?, ?, ?, ?, @new_reqid, @status_code, @status_msg)",
+        [user.id, Number(assignmentId), resid.trim(), trimmedPurpose || null, startDate, endDate]
       );
-
-      newRequestId = insertResult.insertId;
-
-      // Auto-create all approval steps for this request based on the approval hierarchy
-      const [hierarchyRows] = await conn.execute<ApprovalHierarchyRow[]>(
-        `SELECT hid, hlevel, resid, RoleId, ScopeId
-         FROM approval_hierarchies
-         WHERE resid = ?
-         ORDER BY hlevel ASC`,
-        [existingResource.id]
-      );
-
-      if (hierarchyRows.length > 0) {
-        for (const h of hierarchyRows) {
-          // Resolve currently active approver for (RoleId, ScopeId)
-          const [approverRows] = await conn.execute<RowDataPacket[]>(
-            `SELECT ra.UserId
-             FROM role_assignments ra
-             WHERE ra.RoleId = ? AND ra.ScopeId = ?
-               AND ra.ValidFrom <= NOW()
-               AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW())
-             ORDER BY ra.ValidFrom ASC
-             LIMIT 1`,
-            [h.RoleId, h.ScopeId]
-          );
-
-          if (!approverRows || approverRows.length === 0) {
-            throw new Error(
-              `Cannot submit request: No active approver currently holds the required role assignment (Level ${h.hlevel}).`
-            );
-          }
-
-          await conn.execute(
-            `INSERT INTO approval_steps (hid, reqid, approvalstatus, issuetime)
-             VALUES (?, ?, 'PENDING', ?)`,
-            [h.hid, newRequestId, now]
-          );
-        }
+      if (result.statusCode !== "SUCCESS") {
+        if (result.statusCode === "ERROR") console.error("Create request procedure:", result.statusMessage);
+        return { success: false, error: procedureErrors[result.statusCode] ?? "Failed to submit request." };
       }
 
-      await conn.commit();
-    } catch (txError) {
-      await conn.rollback();
-      throw txError;
+      revalidatePath("/dashboard/requests");
+      revalidatePath("/dashboard/approvals");
+      return {
+        success: true,
+        message: "Request submitted successfully!",
+        requestId: result.newReqId,
+      };
     } finally {
       conn.release();
     }
-
-    revalidatePath("/dashboard/requests");
-    return {
-      success: true,
-      message: "Request submitted successfully!",
-      requestId: newRequestId,
-    };
   } catch (error: unknown) {
     console.error("Failed to create request:", error);
     const message = error instanceof Error ? error.message : "Failed to submit request due to a server error.";
-    return {
-      success: false,
-      error: message,
-    };
+    return { success: false, error: message };
   }
 }
 
@@ -307,7 +306,6 @@ export async function getApprovalHierarchyAction(
 export async function cancelRequestAction(reqid: number) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.email) {
       return { success: false, error: "Unauthorized." };
     }
@@ -316,40 +314,35 @@ export async function cancelRequestAction(reqid: number) {
       `SELECT id FROM users WHERE email = ? LIMIT 1`,
       [session.user.email]
     );
-
     const user = userRows[0];
     if (!user) {
       return { success: false, error: "User not found." };
     }
-
-    // Verify the request belongs to this user
-    const [reqRows] = await pool.execute<RequestRow[]>(
-      `SELECT reqid, requesterid, reqstatus FROM requests WHERE reqid = ? AND requesterid = ? LIMIT 1`,
-      [reqid, user.id]
-    );
-
-    const existingReq = reqRows[0];
-    if (!existingReq) {
-      return { success: false, error: "Request not found or not owned by you." };
+    if (!Number.isInteger(reqid) || reqid <= 0) {
+      return { success: false, error: "Invalid request id." };
     }
 
-    if (existingReq.reqstatus !== "PENDING") {
-      return { success: false, error: `Cannot cancel a request that is already ${existingReq.reqstatus}.` };
+    const conn = await pool.getConnection();
+    try {
+      const result = await callRequestProcedure(
+        conn,
+        "CALL sp_cancel_request(?, ?, @status_code, @status_msg)",
+        [reqid, user.id]
+      );
+      if (result.statusCode !== "SUCCESS") {
+        if (result.statusCode === "ERROR") console.error("Cancel request procedure:", result.statusMessage);
+        return { success: false, error: procedureErrors[result.statusCode] ?? "Failed to cancel request." };
+      }
+
+      revalidatePath("/dashboard/requests");
+      revalidatePath("/dashboard/approvals");
+      return { success: true, message: "Request cancelled successfully." };
+    } finally {
+      conn.release();
     }
-
-    await pool.execute(
-      `UPDATE requests SET reqstatus = 'CANCELLED' WHERE reqid = ?`,
-      [reqid]
-    );
-
-    revalidatePath("/dashboard/requests");
-    return { success: true, message: "Request cancelled successfully." };
   } catch (error: unknown) {
     console.error("Failed to cancel request:", error);
     const message = error instanceof Error ? error.message : "Failed to cancel request.";
-    return {
-      success: false,
-      error: message,
-    };
+    return { success: false, error: message };
   }
 }
