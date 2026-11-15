@@ -142,7 +142,7 @@ export async function createRequestAction(input: CreateRequestInput) {
     );
     const user = userRows[0];
     if (!user) {
-      return { success: false, error: "User record not found. Please complete profile onboarding." };
+      return { success: false, error: "User record not found. Please sign in again." };
     }
 
     const { resid, assignmentId, purpose, starttime, endtime } = input;

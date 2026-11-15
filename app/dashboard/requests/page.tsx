@@ -72,7 +72,7 @@ export default async function RequestsPage(props: {
 
   const currentUser = userRows[0];
   if (!currentUser) {
-    redirect("/onboarding");
+    redirect("/api/auth/signout");
   }
 
   // Fetch user's currently valid role assignments

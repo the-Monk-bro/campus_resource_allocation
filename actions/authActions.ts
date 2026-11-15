@@ -9,11 +9,12 @@ export interface RegisterInput {
   name?: string;
   email: string;
   password: string;
+  phno: string;
 }
 
 export async function registerUserAction(input: RegisterInput) {
   try {
-    const { name, email, password } = input;
+    const { name, email, password, phno } = input;
 
     if (!email?.trim() || !password) {
       return { success: false, error: "Email and password are required." };
@@ -31,9 +32,14 @@ export async function registerUserAction(input: RegisterInput) {
       return { success: false, error: "Password must be at least 6 characters long." };
     }
 
+    const trimmedPhno = phno?.trim();
+    if (!trimmedPhno || trimmedPhno.length !== 10 || !/^\d{10}$/.test(trimmedPhno)) {
+      return { success: false, error: "Phone number must be exactly 10 digits." };
+    }
+
     // Check if user already exists
     const [rows] = await pool.execute<UserRow[]>(
-      `SELECT id, name, email, password FROM users WHERE email = ? LIMIT 1`,
+      `SELECT id, name, email, password, phno FROM users WHERE email = ? LIMIT 1`,
       [normalizedEmail]
     );
 
@@ -47,11 +53,11 @@ export async function registerUserAction(input: RegisterInput) {
           error: "An account with this email already exists. Please log in instead.",
         };
       } else {
-        // Linked Google user without password - allow them to set password
+        // Linked Google user without password - allow them to set password & phone
         const updatedName = existing.name || name?.trim() || normalizedEmail.split("@")[0];
         await pool.execute(
-          `UPDATE users SET password = ?, name = ? WHERE email = ?`,
-          [hashedPassword, updatedName, normalizedEmail]
+          `UPDATE users SET password = ?, name = ?, phno = ? WHERE email = ?`,
+          [hashedPassword, updatedName, trimmedPhno, normalizedEmail]
         );
 
         return { success: true, isNew: false };
@@ -62,8 +68,8 @@ export async function registerUserAction(input: RegisterInput) {
     const newName = name?.trim() || normalizedEmail.split("@")[0];
 
     await pool.execute(
-      `INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)`,
-      [id, newName, normalizedEmail, hashedPassword]
+      `INSERT INTO users (id, name, email, password, phno) VALUES (?, ?, ?, ?, ?)`,
+      [id, newName, normalizedEmail, hashedPassword, trimmedPhno]
     );
 
     return { success: true, isNew: true };

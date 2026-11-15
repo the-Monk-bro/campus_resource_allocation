@@ -3,6 +3,15 @@
 
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2/promise";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { UserRow } from "@/lib/types/db";
+import { revalidatePath } from "next/cache";
+
+interface ProcedureOutputRow extends RowDataPacket {
+    statusCode: string | null;
+    statusMessage: string | null;
+}
 
 // Asks MySQL (function fn_check_resource_availability) whether a resource is
 // free for the given time range. Only SCHEDULED and ONGOING allocations block a slot.
@@ -49,6 +58,73 @@ export async function updateAllocationStatusesAction(): Promise<{ success: boole
     } catch (error: unknown) {
         console.error("Failed to update allocation statuses:", error);
         const message = error instanceof Error ? error.message : "Failed to update allocation statuses.";
+        return { success: false, error: message };
+    }
+}
+
+// Executes MySQL procedure sp_cancel_allocation to cancel a SCHEDULED allocation.
+export async function cancelAllocationAction(
+    allocationId: number
+): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.email) {
+            return { success: false, error: "Unauthorized. Please sign in to continue." };
+        }
+
+        const [userRows] = await pool.execute<UserRow[]>(
+            `SELECT id FROM users WHERE email = ? LIMIT 1`,
+            [session.user.email]
+        );
+
+        const currentUser = userRows[0];
+        if (!currentUser) {
+            return { success: false, error: "User profile not found." };
+        }
+
+        if (!allocationId || isNaN(Number(allocationId))) {
+            return { success: false, error: "Invalid allocation ID specified." };
+        }
+
+        const conn = await pool.getConnection();
+        try {
+            await conn.query("SET @status_code = NULL, @status_msg = NULL");
+            await conn.query(
+                "CALL sp_cancel_allocation(?, ?, @status_code, @status_msg)",
+                [Number(allocationId), currentUser.id]
+            );
+
+            const [rows] = await conn.query<ProcedureOutputRow[]>(
+                "SELECT @status_code AS statusCode, @status_msg AS statusMessage"
+            );
+
+            const statusCode = rows[0]?.statusCode;
+            const statusMessage = rows[0]?.statusMessage;
+
+            if (statusCode !== "SUCCESS") {
+                return {
+                    success: false,
+                    error: statusMessage || "Failed to cancel allocation.",
+                };
+            }
+
+            revalidatePath("/dashboard/allocations");
+            revalidatePath("/dashboard/requests");
+            revalidatePath("/dashboard/facilities");
+            revalidatePath("/admin/allocations");
+            revalidatePath("/admin/requests");
+            revalidatePath("/admin");
+
+            return {
+                success: true,
+                message: statusMessage || "Allocation cancelled successfully.",
+            };
+        } finally {
+            conn.release();
+        }
+    } catch (error: unknown) {
+        console.error("Failed to cancel allocation:", error);
+        const message = error instanceof Error ? error.message : "Failed to cancel allocation due to a server error.";
         return { success: false, error: message };
     }
 }

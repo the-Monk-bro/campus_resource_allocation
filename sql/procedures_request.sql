@@ -256,4 +256,121 @@ proc: BEGIN
     SET p_status_message = CONCAT('Request #', p_reqid, ' cancelled.');
 END //
 
+DROP PROCEDURE IF EXISTS sp_cancel_allocation //
+
+CREATE PROCEDURE sp_cancel_allocation (
+    IN  p_allocationid    INT,
+    IN  p_user_id         VARCHAR(255),
+    OUT p_status_code     VARCHAR(30),
+    OUT p_status_message  VARCHAR(255)
+)
+proc: BEGIN
+    DECLARE v_alloc_status   VARCHAR(20) DEFAULT NULL;
+    DECLARE v_requester_id   VARCHAR(255) DEFAULT NULL;
+    DECLARE v_reqid          INT DEFAULT NULL;
+    DECLARE v_starttime      DATETIME DEFAULT NULL;
+    DECLARE v_is_admin       INT DEFAULT 0;
+    DECLARE v_sqlstate       CHAR(5) DEFAULT '00000';
+    DECLARE v_errno          INT DEFAULT 0;
+    DECLARE v_msg            TEXT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            v_sqlstate = RETURNED_SQLSTATE,
+            v_errno    = MYSQL_ERRNO,
+            v_msg      = MESSAGE_TEXT;
+        ROLLBACK;
+        IF v_errno = 1213 THEN
+            SET p_status_code    = 'DEADLOCK';
+            SET p_status_message = 'Deadlock detected; transaction rolled back. Safe to retry.';
+        ELSEIF v_errno = 1205 THEN
+            SET p_status_code    = 'LOCK_TIMEOUT';
+            SET p_status_message = 'Timed out waiting for a lock. Safe to retry.';
+        ELSE
+            SET p_status_code    = 'ERROR';
+            SET p_status_message = LEFT(CONCAT('DB error ', v_errno, ' [', v_sqlstate, ']: ', v_msg), 255);
+        END IF;
+    END;
+
+    SET p_status_code = NULL;
+    SET p_status_message = NULL;
+
+    START TRANSACTION;
+
+    -- Fetch and lock allocation and associated request
+    SELECT a.allocationstatus, r.requesterid, r.reqid, r.starttime
+      INTO v_alloc_status, v_requester_id, v_reqid, v_starttime
+      FROM allocations a
+      JOIN requests r ON r.reqid = a.reqid
+     WHERE a.allocationid = p_allocationid
+       FOR UPDATE;
+
+    IF v_alloc_status IS NULL THEN
+        ROLLBACK;
+        SET p_status_code = 'NOT_FOUND';
+        SET p_status_message = 'Allocation does not exist.';
+        LEAVE proc;
+    END IF;
+
+    -- Authorization check: must be requester or CRAS administrator
+    IF p_user_id IS NOT NULL AND v_requester_id <> p_user_id THEN
+        SELECT COUNT(*) INTO v_is_admin
+          FROM role_assignments ra
+          JOIN roles ro ON ra.RoleId = ro.RoleId
+          JOIN scopes sc ON ra.ScopeId = sc.ScopeId
+         WHERE ra.UserId = p_user_id
+           AND ro.RoleName = 'Admin'
+           AND sc.ScopeName = 'CRAS'
+           AND ra.ValidFrom <= NOW()
+           AND (ra.ValidUntil IS NULL OR ra.ValidUntil >= NOW());
+
+        IF v_is_admin = 0 THEN
+            ROLLBACK;
+            SET p_status_code = 'FORBIDDEN';
+            SET p_status_message = 'Only the requester or a CRAS administrator can cancel this allocation.';
+            LEAVE proc;
+        END IF;
+    END IF;
+
+    -- State validation: can only cancel if SCHEDULED
+    IF v_alloc_status <> 'SCHEDULED' THEN
+        ROLLBACK;
+        SET p_status_code = 'NOT_CANCELLABLE';
+        IF v_alloc_status = 'CANCELLED' THEN
+            SET p_status_message = 'This allocation has already been cancelled.';
+        ELSEIF v_alloc_status = 'ONGOING' THEN
+            SET p_status_message = 'Cannot cancel an ongoing allocation.';
+        ELSEIF v_alloc_status = 'COMPLETED' THEN
+            SET p_status_message = 'Cannot cancel an allocation that is already completed.';
+        ELSE
+            SET p_status_message = CONCAT('Only SCHEDULED allocations can be cancelled (current status: ', v_alloc_status, ').');
+        END IF;
+        LEAVE proc;
+    END IF;
+
+    -- Check if start time has already arrived
+    IF v_starttime <= NOW() THEN
+        ROLLBACK;
+        SET p_status_code = 'NOT_CANCELLABLE';
+        SET p_status_message = 'Cannot cancel an allocation whose start time has already arrived.';
+        LEAVE proc;
+    END IF;
+
+    -- Update allocation status to CANCELLED
+    UPDATE allocations
+       SET allocationstatus = 'CANCELLED'
+     WHERE allocationid = p_allocationid;
+
+    -- Release the request status to CANCELLED as well
+    UPDATE requests
+       SET reqstatus = 'CANCELLED'
+     WHERE reqid = v_reqid;
+
+    COMMIT;
+
+    SET p_status_code    = 'SUCCESS';
+    SET p_status_message = CONCAT('Allocation #', p_allocationid, ' cancelled successfully.');
+END //
+
 DELIMITER ;

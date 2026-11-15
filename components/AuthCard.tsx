@@ -8,6 +8,7 @@ import {
   Mail,
   Lock,
   User,
+  Phone,
   Eye,
   EyeOff,
   AlertCircle,
@@ -23,6 +24,7 @@ export default function AuthCard() {
   // Form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phno, setPhno] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -68,6 +70,11 @@ export default function AuthCard() {
         setErrorMessage("Passwords do not match.");
         return;
       }
+      const trimmedPhno = phno.trim();
+      if (!trimmedPhno || trimmedPhno.length !== 10 || !/^\d{10}$/.test(trimmedPhno)) {
+        setErrorMessage("Phone number must be exactly 10 digits.");
+        return;
+      }
 
       setLoading(true);
       try {
@@ -75,6 +82,7 @@ export default function AuthCard() {
           name: name.trim(),
           email: trimmedEmail,
           password,
+          phno: trimmedPhno,
         });
 
         if (!res.success) {
@@ -100,7 +108,7 @@ export default function AuthCard() {
           return;
         }
 
-        router.push(res.isNew ? "/onboarding" : "/dashboard");
+        router.push("/dashboard");
         router.refresh();
       } catch (err: unknown) {
         const msg =
@@ -237,6 +245,28 @@ export default function AuthCard() {
               />
             </div>
           </div>
+
+          {mode === "register" && (
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Phone Number (10 Digits)
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+                <input
+                  type="tel"
+                  required
+                  minLength={10}
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  value={phno}
+                  onChange={(e) => setPhno(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder="9876543210"
+                  className="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50/60 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-colors"
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">

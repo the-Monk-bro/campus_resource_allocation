@@ -1,6 +1,8 @@
 import AuthCard from "@/components/AuthCard";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import pool from "@/lib/db";
+import { UserRow } from "@/lib/types/db";
 import { redirect } from "next/navigation";
 import {
   Building2,
@@ -17,8 +19,21 @@ import {
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
-  if (session) {
-    redirect("/dashboard");
+  if (session?.user?.email) {
+    try {
+      const [rows] = await pool.execute<UserRow[]>(
+        `SELECT id FROM users WHERE email = ? LIMIT 1`,
+        [session.user.email]
+      );
+      if (rows && rows.length > 0) {
+        redirect("/dashboard");
+      }
+    } catch (err: any) {
+      if (err?.digest?.startsWith("NEXT_REDIRECT")) {
+        throw err;
+      }
+      console.error("Session user check error:", err);
+    }
   }
 
   return (

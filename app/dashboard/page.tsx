@@ -115,7 +115,7 @@ export default async function DashboardPage() {
   const user = userRows[0];
 
   if (!user) {
-    redirect("/onboarding");
+    redirect("/api/auth/signout");
   }
 
   // 2. Fetch role assignments

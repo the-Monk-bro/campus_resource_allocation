@@ -5,6 +5,7 @@ import { UserRow, AllocationStatus } from "@/lib/types/db";
 import { RowDataPacket } from "mysql2/promise";
 import { redirect } from "next/navigation";
 import { CalendarRange, MapPin, Calendar, CheckCircle2 } from "lucide-react";
+import CancelAllocationButton from "@/components/allocations/CancelAllocationButton";
 
 function formatDateTime(date: Date) {
   return new Intl.DateTimeFormat("en-IN", {
@@ -63,7 +64,7 @@ export default async function AllocationsPage() {
 
   const currentUser = userRows[0];
   if (!currentUser) {
-    redirect("/onboarding");
+    redirect("/api/auth/signout");
   }
 
   // Advance lifecycle states (SCHEDULED -> ONGOING -> COMPLETED) based on current time
@@ -190,14 +191,21 @@ export default async function AllocationsPage() {
                   </div>
                 </div>
 
-                {/* Right: Status Pill */}
-                <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                {/* Right: Status Pill & Actions */}
+                <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between md:justify-center gap-2.5 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cfg.cls}`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                     <span>{cfg.label}</span>
                   </span>
+
+                  {alloc.allocationstatus === "SCHEDULED" && (
+                    <CancelAllocationButton
+                      allocationId={alloc.allocationid}
+                      resourceName={alloc.resourceName || alloc.resid}
+                    />
+                  )}
                 </div>
               </div>
             );

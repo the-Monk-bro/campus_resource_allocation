@@ -17,6 +17,7 @@ import {
   Building2,
   Tag,
 } from "lucide-react";
+import CancelAllocationButton from "@/components/allocations/CancelAllocationButton";
 
 export interface AdminAllocationItem {
   allocationid: number;
@@ -378,13 +379,22 @@ export default function AllocationsAdminView({ initialAllocations }: Allocations
                     <strong className="text-slate-800 font-semibold">{formatDateTime(alloc.endtime)}</strong>
                   </p>
                 </div>
-                <Link
-                  href="/admin/requests"
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 mt-1"
-                >
-                  <span>Audit Request Chain</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-3 pt-1">
+                  <Link
+                    href="/admin/requests"
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
+                  >
+                    <span>Audit Chain</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+
+                  {alloc.allocationstatus === "SCHEDULED" && (
+                    <CancelAllocationButton
+                      allocationId={alloc.allocationid}
+                      resourceName={alloc.resourceName ?? alloc.resourceId}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           ))}
